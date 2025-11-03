@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 
-#define CLIENT_ID "7eca33024adf4dc184def80a1520c447"
-#define CLIENT_SECRET "557f3dcbad4f400d8d46bb4d89fccf87"
+#define CLIENT_ID "your_client_id"
+#define CLIENT_SECRET "your_client_secret"
 #define REDIRECT_URI "http://127.0.0.1:8888/callback"
 #define TOKEN_DIR ".config/findSpot"
 #define TOKEN_FILENAME "token.json"
