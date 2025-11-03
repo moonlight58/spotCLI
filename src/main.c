@@ -26,11 +26,32 @@ void print_usage(const char *prog_name) {
 }
 
 void print_menu() {
-    printf("\n=== spotCLI - Spotify CLI ===\n");
+    printf("\n=== findSpot - Spotify CLI ===\n");
     printf("1. Search for tracks\n");
-    printf("2. View saved tracks\n");
-    printf("3. Exit\n");
+    printf("2. Search for artists\n");
+    printf("3. View saved tracks\n");
+    printf("4. Exit\n");
     printf("Choose an option: ");
+}
+
+void search_artists(SpotifyToken *token, const char *query) {
+    printf("\nSearching for artists matching '%s'...\n", query);
+    SpotifyArtistList *results = spotify_search_artists(token, query, 10);
+    
+    if (!results || results->count == 0) {
+        printf("No artists found.\n");
+        if (results) spotify_free_artist_list(results);
+        return;
+    }
+
+    printf("\nFound %d results (total: %d)\n\n", results->count, results->total);
+    
+    for (int i = 0; i < results->count; i++) {
+        spotify_print_artist(&results->artists[i], i + 1);
+        printf("\n");
+    }
+
+    spotify_free_artist_list(results);
 }
 
 void search_and_save(SpotifyToken *token, const char *query) {
@@ -117,10 +138,19 @@ void interactive_mode(SpotifyToken *token) {
                 }
                 break;
             }
-            case 2:
+            case 2: {  // RECHERCHE D'ARTISTES
+                char query[256];
+                printf("\nEnter artist name: ");
+                if (fgets(query, sizeof(query), stdin)) {
+                    query[strcspn(query, "\n")] = '\0';
+                    search_artists(token, query);
+                }
+                break;
+            }
+            case 3:  // VOIR LES TRACKS SAUVEGARDÉES
                 view_saved_tracks(token);
                 break;
-            case 3:
+            case 4:  // QUITTER
                 printf("\nGoodbye!\n");
                 return;
             default:
@@ -226,14 +256,24 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Only track search is implemented for now
-    if (strcmp(search_type, "track") != 0) {
-        printf("⚠️  Currently only track search is fully implemented.\n");
-        printf("Using track search...\n\n");
-    }
-
     char *query = argv[optind];
-    search_and_save(&token, query);
+
+    // Handle different search types
+    if (strcmp(search_type, "track") == 0) {
+        search_and_save(&token, query);
+    } else if (strcmp(search_type, "artist") == 0) {
+        search_artists(&token, query);
+    } else if (strcmp(search_type, "album") == 0 || 
+            strcmp(search_type, "playlist") == 0 ||
+            strcmp(search_type, "user") == 0 ||
+            strcmp(search_type, "audiobook") == 0) {
+        printf("⚠️  Search type '%s' not yet implemented.\n", search_type);
+        printf("Currently supported: track (-t), artist (-a)\n");
+        return 1;
+    } else {
+        fprintf(stderr, "Error: Unknown search type '%s'\n", search_type);
+        return 1;
+    }
 
     return 0;
 }

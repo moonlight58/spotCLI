@@ -241,7 +241,8 @@ The app requests the following Spotify scopes:
 
 ## Roadmap
 
-- [ ] Artist search
+- [x] Artist search
+- [ ] Tracks from an artist search
 - [ ] Album search
 - [ ] Playlist management
 - [ ] Audio preview player
