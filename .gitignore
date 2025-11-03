@@ -1,1 +1,18 @@
+# Build artifacts
+build/
+*.o
+*.d
+findSpot
+
 .env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
