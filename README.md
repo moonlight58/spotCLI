@@ -115,7 +115,7 @@ This app requires a Spotify Developer account. The current implementation uses e
 - [ ] Artist search
 - [ ] Album search
 - [ ] Playlist management
-- [ ] Audio preview player
+- [ ] Audio preview player (premium account only [view here](https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback))
 - [ ] Create custom playlists
 - [ ] Remove tracks from library
 - [ ] Search filters (year, genre, etc.)
