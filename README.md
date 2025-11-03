@@ -4,12 +4,12 @@ A lightweight CLI tool to search Spotify music and add tracks to your liked song
 
 ## Features
 
-- 🔍 Search for tracks
-- ❤️ Save tracks to your library
-- 📋 View your saved tracks
-- 🎵 Interactive and command-line modes
-- 🔐 Automatic OAuth authentication
-- 🔄 Token refresh handling
+- Search for tracks
+- Save tracks to your library
+- View your saved tracks
+- Interactive and command-line modes
+- Automatic OAuth authentication
+- Token refresh handling
 
 ## Installation
 
