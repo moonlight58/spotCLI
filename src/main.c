@@ -27,10 +27,11 @@ void print_usage(const char *prog_name) {
 
 void print_menu() {
     printf("\n=== findSpot - Spotify CLI ===\n");
-    printf("1. Search for tracks\n");
-    printf("2. Search for artists\n");
+    printf("1. Exit\n");
+    printf("2. Options\n");
     printf("3. View saved tracks\n");
-    printf("4. Exit\n");
+    printf("4. Search for artists\n");
+    printf("5. Search for tracks\n");
     printf("Choose an option: ");
 }
 
@@ -116,6 +117,11 @@ void view_saved_tracks(SpotifyToken *token) {
     spotify_free_track_list(saved);
 }
 
+void users_options() {
+    // TODO: Should print every options available like (reload token)
+    printf("still in development");
+}
+
 void interactive_mode(SpotifyToken *token) {
     while (1) {
         print_menu();
@@ -129,30 +135,33 @@ void interactive_mode(SpotifyToken *token) {
         getchar(); // consume newline
 
         switch (choice) {
-            case 1: {
-                char query[256];
-                printf("\nEnter search query: ");
-                if (fgets(query, sizeof(query), stdin)) {
-                    query[strcspn(query, "\n")] = '\0';
-                    search_and_save(token, query);
-                }
+            case 1: // EXIT APP
+                printf("\nGoodbye!\n");
+                return;
+            case 2:  // VIEW OPTIONS
+                users_options();
                 break;
-            }
-            case 2: {  // RECHERCHE D'ARTISTES
-                char query[256];
+            case 3:  // VIEW SAVED/LIKED TRACKS
+                view_saved_tracks(token);
+                break;
+            case 4: { // SEARCH FOR AN ARTIST FROM QUERY
                 printf("\nEnter artist name: ");
+                char query[256];
                 if (fgets(query, sizeof(query), stdin)) {
                     query[strcspn(query, "\n")] = '\0';
                     search_artists(token, query);
                 }
                 break;
             }
-            case 3:  // VOIR LES TRACKS SAUVEGARDÉES
-                view_saved_tracks(token);
+            case 5: { // SEARCH A SONG FROM QUERY
+                printf("\nEnter search query: ");
+                char query[256];
+                if (fgets(query, sizeof(query), stdin)) {
+                    query[strcspn(query, "\n")] = '\0';
+                    search_and_save(token, query);
+                }
                 break;
-            case 4:  // QUITTER
-                printf("\nGoodbye!\n");
-                return;
+            }
             default:
                 printf("Invalid option. Please try again.\n");
         }

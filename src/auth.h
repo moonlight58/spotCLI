@@ -11,6 +11,7 @@ typedef struct {
     char access_token[512];
     char refresh_token[512];
     long expires_in;
+    time_t obtained_at;
 } SpotifyToken;
 
 bool spotify_is_authenticated();

@@ -1,4 +1,5 @@
 #include "auth.h"
+#include "dotenv.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +7,7 @@
 #include <json-c/json.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "dotenv.h"
+#include <time.h>
 
 // Get full path to token file
 char* get_token_path() {
@@ -30,7 +31,8 @@ static void ensure_token_dir() {
 }
 
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
-    size_t realsize = size * nmemb;
+
+size_t realsize = size * nmemb;
     strncat((char *)stream, ptr, realsize);
     return realsize;
 }
@@ -41,7 +43,6 @@ bool spotify_is_authenticated() {
     
     FILE *f = fopen(token_path, "r");
     if (!f) return false;
-    fclose(f);
     return true;
 }
 
@@ -118,6 +119,13 @@ bool spotify_refresh_token(SpotifyToken *token) {
     spotify_save_token(token);
     return true;
 }
+
+bool spotify_token_is_expired(SpotifyToken *token) {
+    time_t now = time(NULL);
+    // Refresh if less than 5 minutes remaining
+    return (now - token->obtained_at) >= (token->expires_in - 300);
+}
+
 
 char* start_callback_server(int port, char *code_buffer, size_t buffer_size);
 
@@ -201,5 +209,12 @@ bool spotify_get_access_token(SpotifyToken *token) {
         printf("No token found, starting authorization...\n");
         return spotify_authorize(token);
     }
+    
+    // Check if token is expired
+    if (spotify_token_is_expired(token)) {
+        printf("Token expired, refreshing...\n");
+        return spotify_refresh_token(token);
+    }
+    
     return true;
 }
