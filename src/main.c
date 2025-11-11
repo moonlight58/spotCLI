@@ -32,6 +32,7 @@ void print_menu() {
     printf("3. View saved tracks\n");
     printf("4. Search for artists\n");
     printf("5. Search for tracks\n");
+    printf("6. View artist's top tracks\n");
     printf("Choose an option: ");
 }
 
@@ -50,6 +51,84 @@ void search_artists(SpotifyToken *token, const char *query) {
     for (int i = 0; i < results->count; i++) {
         spotify_print_artist(&results->artists[i], i + 1);
         printf("\n");
+    }
+
+    spotify_free_artist_list(results);
+}
+
+void view_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *artist_name) {
+    printf("\nFetching top tracks for %s...\n", artist_name);
+    
+    SpotifyTrackList *tracks = spotify_get_artist_top_tracks(token, artist_id, "US");
+    
+    if (!tracks || tracks->count == 0) {
+        printf("No tracks found.\n");
+        if (tracks) spotify_free_track_list(tracks);
+        return;
+    }
+
+    printf("\n🎵 Top %d tracks by %s:\n\n", tracks->count, artist_name);
+    
+    for (int i = 0; i < tracks->count; i++) {
+        spotify_print_track(&tracks->tracks[i], i + 1);
+        printf("\n");
+    }
+
+    // Option to save a track
+    printf("Enter track number to save (or 0 to cancel): ");
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        printf("Invalid input.\n");
+        spotify_free_track_list(tracks);
+        return;
+    }
+    getchar(); // consume newline
+
+    if (choice > 0 && choice <= tracks->count) {
+        const char *track_id = tracks->tracks[choice - 1].id;
+        
+        printf("Saving track...\n");
+        if (spotify_save_tracks(token, &track_id, 1)) {
+            printf("✅ Track saved to your library!\n");
+        } else {
+            printf("❌ Failed to save track.\n");
+        }
+    }
+
+    spotify_free_track_list(tracks);
+}
+
+void search_artist_and_view_top_tracks(SpotifyToken *token, const char *query) {
+    printf("\nSearching for artists matching '%s'...\n", query);
+    SpotifyArtistList *results = spotify_search_artists(token, query, 10);
+    
+    if (!results || results->count == 0) {
+        printf("No artists found.\n");
+        if (results) spotify_free_artist_list(results);
+        return;
+    }
+
+    printf("\nFound %d results (total: %d)\n\n", results->count, results->total);
+    
+    for (int i = 0; i < results->count; i++) {
+        spotify_print_artist(&results->artists[i], i + 1);
+        printf("\n");
+    }
+
+    printf("Enter artist number to view top tracks (or 0 to cancel): ");
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        printf("Invalid input.\n");
+        spotify_free_artist_list(results);
+        return;
+    }
+    getchar(); // consume newline
+
+    if (choice > 0 && choice <= results->count) {
+        const char *artist_id = results->artists[choice - 1].id;
+        const char *artist_name = results->artists[choice - 1].name;
+        
+        view_artist_top_tracks(token, artist_id, artist_name);
     }
 
     spotify_free_artist_list(results);
@@ -119,7 +198,7 @@ void view_saved_tracks(SpotifyToken *token) {
 
 void users_options() {
     // TODO: Should print every options available like (reload token)
-    printf("still in development");
+    printf("still in development\n");
 }
 
 void interactive_mode(SpotifyToken *token) {
@@ -162,11 +241,22 @@ void interactive_mode(SpotifyToken *token) {
                 }
                 break;
             }
+            case 6: { // VIEW ARTIST'S TOP TRACKS
+                printf("\nEnter artist name: ");
+                char query[256];
+                if (fgets(query, sizeof(query), stdin)) {
+                    query[strcspn(query, "\n")] = '\0';
+                    search_artist_and_view_top_tracks(token, query);
+                }
+                break;
+            }
             default:
                 printf("Invalid option. Please try again.\n");
         }
     }
 }
+
+
 
 int main(int argc, char *argv[]) {
 

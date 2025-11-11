@@ -58,7 +58,7 @@ SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, 
     
     MemoryStruct response = {0};
     
-    char auth_header[512];
+    char auth_header[1024];
     snprintf(auth_header, sizeof(auth_header), "Authorization: Bearer %s", token->access_token);
     
     struct curl_slist *headers = NULL;
@@ -406,7 +406,11 @@ SpotifyArtistList* spotify_search_artists(SpotifyToken *token, const char *query
                 strncat(genres_str, json_object_get_string(genre), 
                         sizeof(genres_str) - strlen(genres_str) - 1);
             }
-            strncpy(list->artists[i].genres, genres_str, sizeof(list->artists[i].genres) - 1);
+
+            if (genres_str[0] != '\0') {
+                strncpy(list->artists[i].genres, genres_str, sizeof(list->artists[i].genres) - 1);
+                list->artists[i].genres[sizeof(list->artists[i].genres) - 1] = '\0';
+            }
         }
         
         // Followers
@@ -449,6 +453,114 @@ void spotify_free_artist_list(SpotifyArtistList *list) {
     free(list);
 }
 
+SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *market) {
+    CURL *curl = curl_easy_init();
+    if (!curl) return NULL;
+    
+    // Default to US market if not specified
+    if (!market) market = "US";
+    
+    char url[512];
+    snprintf(url, sizeof(url), 
+             "https://api.spotify.com/v1/artists/%s/top-tracks?market=%s",
+             artist_id, market);
+    
+    MemoryStruct response = {0};
+    
+    char auth_header[1024];
+    snprintf(auth_header, sizeof(auth_header), "Authorization: Bearer %s", token->access_token);
+    
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, auth_header);
+    
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    
+    CURLcode res = curl_easy_perform(curl);
+    
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    
+    if (res != CURLE_OK) {
+        fprintf(stderr, "CURL error: %s\n", curl_easy_strerror(res));
+        free(response.data);
+        return NULL;
+    }
+    
+    // Parse JSON response
+    struct json_object *root = json_tokener_parse(response.data);
+    free(response.data);
+    
+    if (!root) return NULL;
+    
+    struct json_object *tracks;
+    if (!json_object_object_get_ex(root, "tracks", &tracks)) {
+        json_object_put(root);
+        return NULL;
+    }
+    
+    int count = json_object_array_length(tracks);
+    SpotifyTrackList *list = malloc(sizeof(SpotifyTrackList));
+    list->tracks = malloc(sizeof(SpotifyTrack) * count);
+    list->count = count;
+    list->total = count;
+    
+    for (int i = 0; i < count; i++) {
+        struct json_object *item = json_object_array_get_idx(tracks, i);
+        struct json_object *obj;
+        
+        // Initialize with empty strings
+        memset(&list->tracks[i], 0, sizeof(SpotifyTrack));
+        
+        // ID
+        if (json_object_object_get_ex(item, "id", &obj)) {
+            strncpy(list->tracks[i].id, json_object_get_string(obj), 
+                    sizeof(list->tracks[i].id) - 1);
+        }
+        
+        // Name
+        if (json_object_object_get_ex(item, "name", &obj)) {
+            strncpy(list->tracks[i].name, json_object_get_string(obj), 
+                    sizeof(list->tracks[i].name) - 1);
+        }
+        
+        // Artist
+        struct json_object *artists;
+        if (json_object_object_get_ex(item, "artists", &artists) && 
+            json_object_array_length(artists) > 0) {
+            struct json_object *artist = json_object_array_get_idx(artists, 0);
+            if (json_object_object_get_ex(artist, "name", &obj)) {
+                strncpy(list->tracks[i].artist, json_object_get_string(obj), 
+                        sizeof(list->tracks[i].artist) - 1);
+            }
+        }
+        
+        // Album
+        struct json_object *album;
+        if (json_object_object_get_ex(item, "album", &album) &&
+            json_object_object_get_ex(album, "name", &obj)) {
+            strncpy(list->tracks[i].album, json_object_get_string(obj), 
+                    sizeof(list->tracks[i].album) - 1);
+        }
+        
+        // Duration
+        if (json_object_object_get_ex(item, "duration_ms", &obj)) {
+            list->tracks[i].duration_ms = json_object_get_int(obj);
+        }
+        
+        // URI
+        if (json_object_object_get_ex(item, "uri", &obj)) {
+            strncpy(list->tracks[i].uri, json_object_get_string(obj), 
+                    sizeof(list->tracks[i].uri) - 1);
+        }
+    }
+    
+    json_object_put(root);
+    return list;
+}
+
 void spotify_print_artist(SpotifyArtist *artist, int index) {
     printf("%d. %s\n", index, artist->name);
     printf("   Followers: %d\n", artist->followers);
@@ -458,3 +570,5 @@ void spotify_print_artist(SpotifyArtist *artist, int index) {
     }
     printf("   ID: %s\n", artist->id);
 }
+
+

@@ -104,9 +104,11 @@ spotCLI -i
 ```
 
 Menu options:
-- `1` - Search for tracks
-- `2` - View saved tracks
-- `3` - Exit
+- `1` - Exit
+- `2` - Users Options
+- `3` - View saved tracks
+- `4` - Search for artists
+- `5` - Search for tracks
 
 ### Command Line Mode
 
@@ -143,7 +145,7 @@ make help     # Show all available commands
 | Option | Short | Description |
 |--------|-------|-------------|
 | `--track` | `-t` | Search for tracks (default) |
-| `--artist` | `-a` | Search for artists (coming soon) |
+| `--artist` | `-a` | Search for artists |
 | `--album` | `-A` | Search for albums (coming soon) |
 | `--playlist` | `-p` | Search for playlists (coming soon) |
 | `--user` | `-u` | Search for users (coming soon) |
@@ -242,7 +244,7 @@ The app requests the following Spotify scopes:
 ## Roadmap
 
 - [x] Artist search
-- [ ] Tracks from an artist search
+- [x] Tracks from an artist search
 - [ ] Album search
 - [ ] Playlist management
 - [ ] Audio preview player

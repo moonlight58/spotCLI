@@ -53,8 +53,14 @@ bool spotify_save_token(SpotifyToken *token) {
     
     FILE *f = fopen(token_path, "w");
     if (!f) return false;
-    fprintf(f, "{ \"access_token\": \"%s\", \"refresh_token\": \"%s\", \"expires_in\": %ld }",
-            token->access_token, token->refresh_token, token->expires_in);
+    
+    // Save current time as obtained_at if not set
+    if (token->obtained_at == 0) {
+        token->obtained_at = time(NULL);
+    }
+    
+    fprintf(f, "{ \"access_token\": \"%s\", \"refresh_token\": \"%s\", \"expires_in\": %ld, \"obtained_at\": %ld }",
+            token->access_token, token->refresh_token, token->expires_in, token->obtained_at);
     fclose(f);
     return true;
 }
@@ -75,6 +81,15 @@ bool spotify_load_token(SpotifyToken *token) {
     strcpy(token->access_token, json_object_get_string(json_object_object_get(parsed, "access_token")));
     strcpy(token->refresh_token, json_object_get_string(json_object_object_get(parsed, "refresh_token")));
     token->expires_in = json_object_get_int64(json_object_object_get(parsed, "expires_in"));
+    
+    // Load obtained_at if it exists, otherwise set to current time
+    struct json_object *obtained_at_obj = json_object_object_get(parsed, "obtained_at");
+    if (obtained_at_obj) {
+        token->obtained_at = json_object_get_int64(obtained_at_obj);
+    } else {
+        // For backwards compatibility with old token files
+        token->obtained_at = time(NULL);
+    }
 
     json_object_put(parsed);
     fclose(f);
@@ -114,6 +129,7 @@ bool spotify_refresh_token(SpotifyToken *token) {
     struct json_object *json = json_tokener_parse(response);
     strcpy(token->access_token, json_object_get_string(json_object_object_get(json, "access_token")));
     token->expires_in = json_object_get_int64(json_object_object_get(json, "expires_in"));
+    token->obtained_at = time(NULL);  // ADD THIS LINE
     json_object_put(json);
 
     spotify_save_token(token);
@@ -121,11 +137,25 @@ bool spotify_refresh_token(SpotifyToken *token) {
 }
 
 bool spotify_token_is_expired(SpotifyToken *token) {
+    // If obtained_at is not set (0 or invalid), consider token valid
+    // This prevents segfault when obtained_at is uninitialized
+    if (token->obtained_at <= 0) {
+        printf("Token obtained_at not set, assuming valid\n");
+        return false;
+    }
+    
     time_t now = time(NULL);
+    time_t elapsed = now - token->obtained_at;
+    time_t remaining = token->expires_in - elapsed;
+    
     // Refresh if less than 5 minutes remaining
-    return (now - token->obtained_at) >= (token->expires_in - 300);
+    printf("Checking if token expired: elapsed=%ld, remaining=%ld\n", elapsed, remaining);
+    
+    bool is_expired = (now - token->obtained_at) >= (token->expires_in - 300);
+    printf("Token expired: %s\n", is_expired ? "yes" : "no");
+    
+    return is_expired;
 }
-
 
 char* start_callback_server(int port, char *code_buffer, size_t buffer_size);
 
@@ -196,6 +226,7 @@ bool spotify_authorize(SpotifyToken *token) {
     strcpy(token->access_token, json_object_get_string(access));
     strcpy(token->refresh_token, json_object_get_string(refresh));
     token->expires_in = json_object_get_int64(expires);
+    token->obtained_at = time(NULL);  // ADD THIS LINE
 
     json_object_put(json);
 

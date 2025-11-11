@@ -79,9 +79,9 @@ char* start_callback_server(int port, char *code_buffer, size_t buffer_size) {
     const char *response = 
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: text/html\r\n\r\n"
-        "<html><body style='font-family: Arial; text-align: center; padding: 50px;'>"
-        "<h1 style='color: #1DB954;'>✓ Authorization Successful!</h1>"
-        "<p>You can close this window and return to the terminal.</p>"
+        "<html><body style='font-family: Arial; text-align: center; padding: 50px; background-color: #141414;'>"
+        "<h1 style='color: #1DB954;'>Authorization Successful!</h1>"
+        "<p style='color: #1DB954;'>You can close this window and return to the terminal.</p>"
         "</body></html>";
     
     write(client_fd, response, strlen(response));

@@ -41,11 +41,17 @@ SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, 
 // Search for artists
 SpotifyArtistList* spotify_search_artists(SpotifyToken *token, const char *query, int limit);
 
+// Get artist's top tracks
+SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *market);
+
 // Add tracks to user's library
 bool spotify_save_tracks(SpotifyToken *token, const char **track_ids, int count);
 
 // Get user's saved tracks
 SpotifyTrackList* spotify_get_saved_tracks(SpotifyToken *token, int limit, int offset);
+
+// Get artist's top tracks
+SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *market);
 
 // Free track list memory
 void spotify_free_track_list(SpotifyTrackList *list);
