@@ -33,6 +33,7 @@ void print_menu() {
     printf("4. Search for artists\n");
     printf("5. Search for tracks\n");
     printf("6. View artist's top tracks\n");
+    printf("7. View artist's albums\n");
     printf("Choose an option: ");
 }
 
@@ -98,6 +99,41 @@ void view_artist_top_tracks(SpotifyToken *token, const char *artist_id, const ch
     spotify_free_track_list(tracks);
 }
 
+void view_artist_albums(SpotifyToken *token, const char *artist_id, const char *artist_name) {
+    if (!token || !artist_id || !artist_name) {
+        printf("Invalid parameters\n");
+        return;
+    }
+    
+    printf("Fetching albums for %s...\n", artist_name);
+    fflush(stdout);  // Ensure output is printed before potential crash
+    
+    SpotifyAlbumList *albums = spotify_get_artist_albums(token, artist_id);
+    
+    if (!albums) {
+        printf("Failed to fetch albums.\n");
+        return;
+    }
+    
+    if (albums->count == 0) {
+        printf("No albums found.\n");
+        spotify_free_album_list(albums);
+        return;
+    }
+    
+    printf("\nFound %d album(s) by %s:\n\n", albums->count, artist_name);
+    fflush(stdout);
+    
+    for (int i = 0; i < albums->count; i++) {
+        printf("%d. %s\n", i + 1, albums->albums[i].name);
+        printf("   Artist: %s\n", albums->albums[i].artist);
+        printf("   ID: %s\n\n", albums->albums[i].id);
+        fflush(stdout);
+    }
+
+    spotify_free_album_list(albums);
+}
+
 void search_artist_and_view_top_tracks(SpotifyToken *token, const char *query) {
     printf("\nSearching for artists matching '%s'...\n", query);
     SpotifyArtistList *results = spotify_search_artists(token, query, 10);
@@ -129,6 +165,42 @@ void search_artist_and_view_top_tracks(SpotifyToken *token, const char *query) {
         const char *artist_name = results->artists[choice - 1].name;
         
         view_artist_top_tracks(token, artist_id, artist_name);
+    }
+
+    spotify_free_artist_list(results);
+}
+
+void search_artist_and_view_albums(SpotifyToken *token, const char *query) {
+    printf("\nSearching for artists matching '%s'...\n", query);
+    SpotifyArtistList *results = spotify_search_artists(token, query, 10);
+    
+    if (!results || results->count == 0) {
+        printf("No artists found.\n");
+        if (results) spotify_free_artist_list(results);
+        return;
+    }
+
+    printf("\nFound %d results (total: %d)\n\n", results->count, results->total);
+    
+    for (int i = 0; i < results->count; i++) {
+        spotify_print_artist(&results->artists[i], i + 1);
+        printf("\n");
+    }
+
+    printf("Enter artist number to view albums (or 0 to cancel): ");
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        printf("Invalid input.\n");
+        spotify_free_artist_list(results);
+        return;
+    }
+    getchar(); // consume newline
+
+    if (choice > 0 && choice <= results->count) {
+        const char *artist_id = results->artists[choice - 1].id;
+        const char *artist_name = results->artists[choice - 1].name;
+        
+        view_artist_albums(token, artist_id, artist_name);
     }
 
     spotify_free_artist_list(results);
@@ -250,6 +322,14 @@ void interactive_mode(SpotifyToken *token) {
                 }
                 break;
             }
+            case 7: // VIEW ARTIST'S ALBUMS
+                printf("\nEnter artist name: ");
+                char query[256];
+                if (fgets(query, sizeof(query), stdin)) {
+                    query[strcspn(query, "\n")] = '\0';
+                    search_artist_and_view_albums(token, query);
+                }
+                break;
             default:
                 printf("Invalid option. Please try again.\n");
         }

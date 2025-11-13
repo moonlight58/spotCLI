@@ -245,7 +245,7 @@ The app requests the following Spotify scopes:
 
 - [x] Artist search
 - [x] Tracks from an artist search
-- [ ] Album search
+- [x] Album search
 - [ ] Playlist management
 - [ ] Audio preview player
 - [ ] Create custom playlists
