@@ -47,6 +47,20 @@ typedef struct {
     int total;
 } SpotifyAlbumList;
 
+typedef struct {
+    char id[64];
+    char name[256];
+    char uri[128];
+    bool is_public;
+    int count_tracks;
+} SpotifyPlaylist;
+
+typedef struct {
+    SpotifyPlaylist* playlists;
+    int count;
+    int total;
+} SpotifyPlaylistList;
+
 // Search for tracks
 SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, int limit);
 
@@ -68,6 +82,9 @@ SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char 
 // Get artist's albums
 SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *artist_id);
 
+// Get user's playlists
+SpotifyPlaylistList* spotify_get_user_playlists(SpotifyToken *token, int limit, int offset);
+
 // Free track list memory
 void spotify_free_track_list(SpotifyTrackList *list);
 
@@ -77,6 +94,9 @@ void spotify_free_artist_list(SpotifyArtistList *list);
 // Free album list memory
 void spotify_free_album_list(SpotifyAlbumList *list);
 
+// Free user's playlist memory
+void spotify_free_playlist_list(SpotifyPlaylistList *list);
+
 // Helper to print track info
 void spotify_print_track(SpotifyTrack *track, int index);
 
@@ -85,5 +105,8 @@ void spotify_print_artist(SpotifyArtist *artist, int index);
 
 // Helper to print album info
 void spotify_print_album(SpotifyAlbum *album, int index);
+
+// Helper to print user's playlist info
+void spotify_print_playlist(SpotifyPlaylist *playlist, int index);
 
 #endif

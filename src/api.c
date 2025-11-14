@@ -140,7 +140,7 @@ static void parse_track_json(struct json_object *item, SpotifyTrack *track) {
         }
     }
     
-    // Album - CORRECTION ICI: "albums" -> "album"
+    // Album
     struct json_object *album;
     if (json_object_object_get_ex(item, "album", &album) &&
         json_object_object_get_ex(album, "name", &obj)) {
@@ -218,6 +218,42 @@ static void parse_artist_json(struct json_object *item, SpotifyArtist *artist) {
         if (json_object_object_get_ex(image, "url", &obj)) {
             strncpy(artist->image_url, json_object_get_string(obj), sizeof(artist->image_url) - 1);
         }
+    }
+}
+
+/**
+ * Parse playlist data from JSON object into SpotifyPlaylist struct
+ */
+static void parse_playlist_json(struct json_object *item, SpotifyPlaylist *playlist) {
+    struct json_object *obj;
+
+    memset(playlist, 0, sizeof(SpotifyPlaylist));
+    
+    // ID
+    if (json_object_object_get_ex(item, "id", &obj)) {
+        strncpy(playlist->id, json_object_get_string(obj), sizeof(playlist->id) - 1);
+    }
+
+    // Name
+    if (json_object_object_get_ex(item, "name", &obj)) {
+        strncpy(playlist->name, json_object_get_string(obj), sizeof(playlist->name) - 1);
+    }
+
+    // URI
+    if (json_object_object_get_ex(item, "uri", &obj)) {
+        strncpy(playlist->uri, json_object_get_string(obj), sizeof(playlist->uri) - 1);
+    }
+    
+    // Public (correction du type dans api.h si nécessaire)
+    if (json_object_object_get_ex(item, "public", &obj)) {
+        playlist->is_public = json_object_get_boolean(obj);
+    }
+    
+    // Track count
+    struct json_object *tracks_obj;
+    if (json_object_object_get_ex(item, "tracks", &tracks_obj) &&
+        json_object_object_get_ex(tracks_obj, "total", &obj)) {
+        playlist->count_tracks = json_object_get_int(obj);
     }
 }
 
@@ -484,6 +520,42 @@ SpotifyTrackList* spotify_get_saved_tracks(SpotifyToken *token, int limit, int o
     return list;
 }
 
+SpotifyPlaylistList* spotify_get_user_playlists(SpotifyToken *token, int limit, int offset) {
+    char url[256];
+    snprintf(url, sizeof(url), 
+             "https://api.spotify.com/v1/me/playlists?limit=%d&offset=%d",
+             limit, offset);
+    
+    struct json_object *root = spotify_api_get(token, url);
+    if (!root) return NULL;
+    
+    struct json_object *items;
+    if (!json_object_object_get_ex(root, "items", &items)) {
+        json_object_put(root);
+        return NULL;
+    }
+
+    int count = json_object_array_length(items);
+    SpotifyPlaylistList *list = malloc(sizeof(SpotifyPlaylistList));
+    list->playlists = malloc(sizeof(SpotifyPlaylist) * count);
+    list->count = count;
+    
+    struct json_object *total_obj;
+    if (json_object_object_get_ex(root, "total", &total_obj)) {
+        list->total = json_object_get_int(total_obj);
+    } else {
+        list->total = count;
+    }
+    
+    for (int i = 0; i < count; i++) {
+        struct json_object *item = json_object_array_get_idx(items, i);
+        parse_playlist_json(item, &list->playlists[i]);
+    }
+    
+    json_object_put(root);
+    return list;
+}
+
 bool spotify_save_tracks(SpotifyToken *token, const char **track_ids, int count) {
     // Build JSON body
     struct json_object *root = json_object_new_object();
@@ -520,6 +592,12 @@ void spotify_free_album_list(SpotifyAlbumList *list) {
     free(list);
 }
 
+void spotify_free_playlist_list(SpotifyPlaylistList *list) {
+    if (!list) return;
+    free(list->playlists);
+    free(list);
+}
+
 void spotify_print_track(SpotifyTrack *track, int index) {
     printf("%d. %s\n", index, track->name);
     printf("   Artist: %s\n", track->artist);
@@ -544,4 +622,11 @@ void spotify_print_album(SpotifyAlbum *album, int index) {
     printf("%d. %s\n", index, album->name);
     printf("   Artist: %s\n", album->artist);
     printf("   ID: %s\n", album->id);
+}
+
+void spotify_print_playlist(SpotifyPlaylist *playlist, int index) {
+    printf("%d. %s\n", index, playlist->name);
+    printf("   Tracks: %d\n", playlist->count_tracks);
+    printf("   Public: %s\n", playlist->is_public ? "Yes" : "No");
+    printf("   ID: %s\n", playlist->id);
 }
