@@ -97,69 +97,42 @@ typedef struct {
     SpotifyDevice device;
 } SpotifyPlayerState;
 
-// Search for tracks
+// Search for tracks, artists, artists top tracks
 SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, int limit);
-
-// Search for artists
 SpotifyArtistList* spotify_search_artists(SpotifyToken *token, const char *query, int limit);
-
-// Get artist's top tracks
 SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *market);
 
 // Add tracks to user's library
 bool spotify_save_tracks(SpotifyToken *token, const char **track_ids, int count);
 
-// Get user's saved tracks
+// Get user's saved tracks, artists top tracks, artist's albums, user's albums, player's state
 SpotifyTrackList* spotify_get_saved_tracks(SpotifyToken *token, int limit, int offset);
-
-// Get artist's top tracks
 SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *market);
-
-// Get artist's albums
 SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *artist_id);
-
-// Get user's playlists
 SpotifyPlaylistList* spotify_get_user_playlists(SpotifyToken *token, int limit, int offset);
-
-// Get player's state
 SpotifyPlayerState* spotify_get_player_state(SpotifyToken *token);
 
-// Free track list memory
+// Free track list, artist list, album list, player state, user's playlist memory
 void spotify_free_track_list(SpotifyTrackList *list);
-
-// Free artist list memory
 void spotify_free_artist_list(SpotifyArtistList *list);
-
-// Free album list memory
 void spotify_free_album_list(SpotifyAlbumList *list);
-
-// Free player state memory
 void spotify_free_player_state(SpotifyPlayerState *state);
-
-// Free user's playlist memory
 void spotify_free_playlist_list(SpotifyPlaylistList *list);
 
-// Helper to print track info
+// Helper to print track, artist, album, user's playlist, player state info
 void spotify_print_track(SpotifyTrack *track, int index);
-
-// Helper to print artist info
 void spotify_print_artist(SpotifyArtist *artist, int index);
-
-// Helper to print album info
 void spotify_print_album(SpotifyAlbum *album, int index);
-
-// Helper to print user's playlist info
 void spotify_print_playlist(SpotifyPlaylist *playlist, int index);
-
-// Helper to print player's state
 void spotify_print_player_state(SpotifyPlayerState *state);
 
-// Control playback
+// Control playback (pause/resume/start/toggle)
 bool spotify_pause_playback(SpotifyToken *token, const char *device_id);
 bool spotify_resume_playback(SpotifyToken *token, const char *device_id);
 bool spotify_start_playback(SpotifyToken *token, const char *device_id, const char *context_uri, const char **uris, int uri_count);
 bool spotify_toggle_playback(SpotifyToken *token);
 
+// Control playback (skip to next/skip to previous/toggle shuffle)
 bool spotify_skip_next_playback(SpotifyToken *token, const char *device_id);
 bool spotify_skip_previous_playback(SpotifyToken *token, const char *device_id);
 bool spotify_toggle_playback_shuffle(SpotifyToken *token, const char *device_id, bool state_shuffle);
