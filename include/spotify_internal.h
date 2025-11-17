@@ -66,4 +66,10 @@ bool spotify_api_put_empty(SpotifyToken *token, const char *url);
  */
 bool spotify_api_post(SpotifyToken *token, const char *url, const char *json_data);
 
+/**
+ * Performs a POST request to Spotify API (without body)
+ * Returns true if response code is 204 (No Content)
+ */
+bool spotify_api_post_empty(SpotifyToken *token, const char *url);
+
 #endif // SPOTIFY_INTERNAL_H

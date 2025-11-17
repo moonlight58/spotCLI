@@ -9,40 +9,40 @@
 SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, int limit) {
     char *encoded_query = url_encode(query);
     if (!encoded_query) return NULL;
-    
+
     char url[512];
-    snprintf(url, sizeof(url), 
+    snprintf(url, sizeof(url),
              "https://api.spotify.com/v1/search?q=%s&type=track&limit=%d",
              encoded_query, limit);
     free(encoded_query);
-    
+
     struct json_object *root = spotify_api_get(token, url);
     if (!root) return NULL;
-    
+
     struct json_object *tracks_obj, *items;
     if (!json_object_object_get_ex(root, "tracks", &tracks_obj) ||
         !json_object_object_get_ex(tracks_obj, "items", &items)) {
         json_object_put(root);
         return NULL;
     }
-    
+
     int count = json_object_array_length(items);
     SpotifyTrackList *list = malloc(sizeof(SpotifyTrackList));
     list->tracks = malloc(sizeof(SpotifyTrack) * count);
     list->count = count;
-    
+
     struct json_object *total_obj;
     if (json_object_object_get_ex(tracks_obj, "total", &total_obj)) {
         list->total = json_object_get_int(total_obj);
     } else {
         list->total = count;
     }
-    
+
     for (int i = 0; i < count; i++) {
         struct json_object *item = json_object_array_get_idx(items, i);
         parse_track_json(item, &list->tracks[i]);
     }
-    
+
     json_object_put(root);
     return list;
 }
@@ -50,72 +50,72 @@ SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, 
 SpotifyArtistList* spotify_search_artists(SpotifyToken *token, const char *query, int limit) {
     char *encoded_query = url_encode(query);
     if (!encoded_query) return NULL;
-    
+
     char url[512];
-    snprintf(url, sizeof(url), 
+    snprintf(url, sizeof(url),
              "https://api.spotify.com/v1/search?q=%s&type=artist&limit=%d",
              encoded_query, limit);
     free(encoded_query);
-    
+
     struct json_object *root = spotify_api_get(token, url);
     if (!root) return NULL;
-    
+
     struct json_object *artists_obj, *items;
     if (!json_object_object_get_ex(root, "artists", &artists_obj) ||
         !json_object_object_get_ex(artists_obj, "items", &items)) {
         json_object_put(root);
         return NULL;
     }
-    
+
     int count = json_object_array_length(items);
     SpotifyArtistList *list = malloc(sizeof(SpotifyArtistList));
     list->artists = malloc(sizeof(SpotifyArtist) * count);
     list->count = count;
-    
+
     struct json_object *total_obj;
     if (json_object_object_get_ex(artists_obj, "total", &total_obj)) {
         list->total = json_object_get_int(total_obj);
     } else {
         list->total = count;
     }
-    
+
     for (int i = 0; i < count; i++) {
         struct json_object *item = json_object_array_get_idx(items, i);
         parse_artist_json(item, &list->artists[i]);
     }
-    
+
     json_object_put(root);
     return list;
 }
 
 SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *market) {
     if (!market) market = "US";
-    
+
     char url[512];
-    snprintf(url, sizeof(url), 
+    snprintf(url, sizeof(url),
              "https://api.spotify.com/v1/artists/%s/top-tracks?market=%s",
              artist_id, market);
-    
+
     struct json_object *root = spotify_api_get(token, url);
     if (!root) return NULL;
-    
+
     struct json_object *tracks;
     if (!json_object_object_get_ex(root, "tracks", &tracks)) {
         json_object_put(root);
         return NULL;
     }
-    
+
     int count = json_object_array_length(tracks);
     SpotifyTrackList *list = malloc(sizeof(SpotifyTrackList));
     list->tracks = malloc(sizeof(SpotifyTrack) * count);
     list->count = count;
     list->total = count;
-    
+
     for (int i = 0; i < count; i++) {
         struct json_object *item = json_object_array_get_idx(tracks, i);
         parse_track_json(item, &list->tracks[i]);
     }
-    
+
     json_object_put(root);
     return list;
 }
@@ -171,7 +171,7 @@ SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *art
     }
 
     list->count = count;
-    
+
     struct json_object *total_obj;
     if (json_object_object_get_ex(root, "total", &total_obj)) {
         list->total = json_object_get_int(total_obj);
@@ -187,9 +187,9 @@ SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *art
         }
 
         struct json_object *obj;
-        
+
         memset(&list->albums[i], 0, sizeof(SpotifyAlbum));
-        
+
         // ID
         if (json_object_object_get_ex(item, "id", &obj)) {
             const char *id_str = json_object_get_string(obj);
@@ -198,7 +198,7 @@ SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *art
                 list->albums[i].id[sizeof(list->albums[i].id) - 1] = '\0';
             }
         }
-        
+
         // Name
         if (json_object_object_get_ex(item, "name", &obj)) {
             const char *name_str = json_object_get_string(obj);
@@ -207,10 +207,10 @@ SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *art
                 list->albums[i].name[sizeof(list->albums[i].name) - 1] = '\0';
             }
         }
-        
+
         // Artist (from artists array)
         struct json_object *artists;
-        if (json_object_object_get_ex(item, "artists", &artists) && 
+        if (json_object_object_get_ex(item, "artists", &artists) &&
             json_object_array_length(artists) > 0) {
             struct json_object *artist = json_object_array_get_idx(artists, 0);
             if (artist && json_object_object_get_ex(artist, "name", &obj)) {
@@ -229,53 +229,53 @@ SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *art
 
 SpotifyTrackList* spotify_get_saved_tracks(SpotifyToken *token, int limit, int offset) {
     char url[256];
-    snprintf(url, sizeof(url), 
+    snprintf(url, sizeof(url),
              "https://api.spotify.com/v1/me/tracks?limit=%d&offset=%d",
              limit, offset);
-    
+
     struct json_object *root = spotify_api_get(token, url);
     if (!root) return NULL;
-    
+
     struct json_object *items;
     if (!json_object_object_get_ex(root, "items", &items)) {
         json_object_put(root);
         return NULL;
     }
-    
+
     int count = json_object_array_length(items);
     SpotifyTrackList *list = malloc(sizeof(SpotifyTrackList));
     list->tracks = malloc(sizeof(SpotifyTrack) * count);
     list->count = count;
-    
+
     struct json_object *total_obj;
     if (json_object_object_get_ex(root, "total", &total_obj)) {
         list->total = json_object_get_int(total_obj);
     } else {
         list->total = count;
     }
-    
+
     for (int i = 0; i < count; i++) {
         struct json_object *item = json_object_array_get_idx(items, i);
         struct json_object *track;
-        
+
         if (json_object_object_get_ex(item, "track", &track)) {
             parse_track_json(track, &list->tracks[i]);
         }
     }
-    
+
     json_object_put(root);
     return list;
 }
 
 SpotifyPlaylistList* spotify_get_user_playlists(SpotifyToken *token, int limit, int offset) {
     char url[256];
-    snprintf(url, sizeof(url), 
+    snprintf(url, sizeof(url),
              "https://api.spotify.com/v1/me/playlists?limit=%d&offset=%d",
              limit, offset);
-    
+
     struct json_object *root = spotify_api_get(token, url);
     if (!root) return NULL;
-    
+
     struct json_object *items;
     if (!json_object_object_get_ex(root, "items", &items)) {
         json_object_put(root);
@@ -286,19 +286,19 @@ SpotifyPlaylistList* spotify_get_user_playlists(SpotifyToken *token, int limit, 
     SpotifyPlaylistList *list = malloc(sizeof(SpotifyPlaylistList));
     list->playlists = malloc(sizeof(SpotifyPlaylist) * count);
     list->count = count;
-    
+
     struct json_object *total_obj;
     if (json_object_object_get_ex(root, "total", &total_obj)) {
         list->total = json_object_get_int(total_obj);
     } else {
         list->total = count;
     }
-    
+
     for (int i = 0; i < count; i++) {
         struct json_object *item = json_object_array_get_idx(items, i);
         parse_playlist_json(item, &list->playlists[i]);
     }
-    
+
     json_object_put(root);
     return list;
 }
@@ -307,129 +307,129 @@ bool spotify_save_tracks(SpotifyToken *token, const char **track_ids, int count)
     // Build JSON body
     struct json_object *root = json_object_new_object();
     struct json_object *ids_array = json_object_new_array();
-    
+
     for (int i = 0; i < count; i++) {
         json_object_array_add(ids_array, json_object_new_string(track_ids[i]));
     }
-    
+
     json_object_object_add(root, "ids", ids_array);
     const char *json_str = json_object_to_json_string(root);
-    
+
     bool result = spotify_api_put(token, "https://api.spotify.com/v1/me/tracks", json_str);
-    
+
     json_object_put(root);
     return result;
 }
 
 SpotifyPlayerState* spotify_get_player_state(SpotifyToken *token) {
     const char *url = "https://api.spotify.com/v1/me/player";
-    
+
     struct json_object *root = spotify_api_get(token, url);
     if (!root) {
         fprintf(stderr, "Failed to get player state (no active device or API error)\n");
         return NULL;
     }
-    
+
     // Check if response is empty (no active device)
     if (json_object_get_type(root) == json_type_null) {
         json_object_put(root);
         fprintf(stderr, "No active playback device found\n");
         return NULL;
     }
-    
+
     SpotifyPlayerState *state = malloc(sizeof(SpotifyPlayerState));
     if (!state) {
         json_object_put(root);
         return NULL;
     }
-    
+
     parse_player_state_json(root, state);
     json_object_put(root);
-    
+
     return state;
 }
 
 /**
  * Pause playback on the user's active device
- * 
+ *
  * @param token - Valid Spotify token
  * @param device_id - Optional: specific device ID (NULL for current active device)
  * @return true if successful, false otherwise
  */
 bool spotify_pause_playback(SpotifyToken *token, const char *device_id) {
     char url[256];
-    
+
     if (device_id) {
-        snprintf(url, sizeof(url), 
-                 "https://api.spotify.com/v1/me/player/pause?device_id=%s", 
-                 device_id);
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/pause?device_id=%s",
+                device_id);
     } else {
         snprintf(url, sizeof(url), "https://api.spotify.com/v1/me/player/pause");
     }
-    
+
     return spotify_api_put_empty(token, url);
 }
 
 /**
  * Resume playback on the user's active device
- * 
+ *
  * @param token - Valid Spotify token
  * @param device_id - Optional: specific device ID (NULL for current active device)
  * @return true if successful, false otherwise
  */
 bool spotify_resume_playback(SpotifyToken *token, const char *device_id) {
     char url[256];
-    
+
     if (device_id) {
-        snprintf(url, sizeof(url), 
-                 "https://api.spotify.com/v1/me/player/play?device_id=%s", 
+        snprintf(url, sizeof(url),
+                 "https://api.spotify.com/v1/me/player/play?device_id=%s",
                  device_id);
     } else {
         snprintf(url, sizeof(url), "https://api.spotify.com/v1/me/player/play");
     }
-    
+
     return spotify_api_post(token, url, NULL);
 }
 
 /**
  * Start/Resume playback with specific context or tracks
- * 
+ *
  * @param token - Valid Spotify token
  * @param device_id - Optional: specific device ID (NULL for current active device)
  * @param context_uri - Optional: Spotify URI of context (playlist, album, artist)
  * @param uris - Optional: Array of track URIs to play
  * @param uri_count - Number of URIs in the array
  * @return true if successful, false otherwise
- * 
+ *
  * Examples:
  * - Play a playlist: context_uri = "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M"
  * - Play specific tracks: uris = {"spotify:track:4iV5W9uYEdYUVa79Axb7Rh", ...}
  */
-bool spotify_start_playback(SpotifyToken *token, const char *device_id, 
+bool spotify_start_playback(SpotifyToken *token, const char *device_id,
                             const char *context_uri, const char **uris, int uri_count) {
     char url[256];
-    
+
     if (device_id) {
-        snprintf(url, sizeof(url), 
-                 "https://api.spotify.com/v1/me/player/play?device_id=%s", 
+        snprintf(url, sizeof(url),
+                 "https://api.spotify.com/v1/me/player/play?device_id=%s",
                  device_id);
     } else {
         snprintf(url, sizeof(url), "https://api.spotify.com/v1/me/player/play");
     }
-    
+
     // Build JSON body if context_uri or uris are provided
     const char *json_str = NULL;
     struct json_object *root = NULL;
-    
+
     if (context_uri || (uris && uri_count > 0)) {
         root = json_object_new_object();
-        
+
         // Add context URI (playlist, album, artist)
         if (context_uri) {
-            json_object_object_add(root, "context_uri", 
+            json_object_object_add(root, "context_uri",
                                   json_object_new_string(context_uri));
         }
-        
+
         // Add specific track URIs
         if (uris && uri_count > 0) {
             struct json_object *uris_array = json_object_new_array();
@@ -438,17 +438,31 @@ bool spotify_start_playback(SpotifyToken *token, const char *device_id,
             }
             json_object_object_add(root, "uris", uris_array);
         }
-        
+
         json_str = json_object_to_json_string(root);
     }
-    
+
     bool result = spotify_api_post(token, url, json_str);
-    
+
     if (root) {
         json_object_put(root);
     }
-    
+
     return result;
+}
+
+bool spotify_skip_next_playback(SpotifyToken *token, const char *device_id) {
+    char url[256];
+
+    if (device_id) {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/next?device_id=%s",
+                device_id);
+    } else {
+        snprintf(url, sizeof(url), "https://api.spotify.com/v1/me/player/next");
+    }
+
+    return spotify_api_post_empty(token, url);
 }
 
 /**
@@ -460,7 +474,7 @@ bool spotify_toggle_playback(SpotifyToken *token) {
         fprintf(stderr, "Cannot toggle: no active playback\n");
         return false;
     }
-    
+
     bool result;
     if (state->is_playing) {
         printf("⏸ Pausing...\n");
@@ -469,13 +483,13 @@ bool spotify_toggle_playback(SpotifyToken *token) {
         printf("▶ Resuming...\n");
         result = spotify_resume_playback(token, NULL);
     }
-    
+
     spotify_free_player_state(state);
     return result;
 }
 
 /**
- * Allow to play multiples tracks like a queue tracks
+ * Allow to play multiples tracks like a queue tracks (it's an example for further implementation, but don't care for now)
  */
 void play_multiple_tracks(SpotifyToken *token) {
     const char *track_uris[] = {
@@ -483,9 +497,9 @@ void play_multiple_tracks(SpotifyToken *token) {
         "spotify:track:3n3Ppam7vgaVa1iaRUc9Lp",  // Mr. Brightside
         "spotify:track:7qiZfU4dY1lWllzX7mPBI6"   // Shape of You
     };
-    
+
     printf("🎵 Playing queue of %zu tracks...\n", sizeof(track_uris) / sizeof(track_uris[0]));
-    
+
     if (spotify_start_playback(token, NULL, NULL, track_uris, 3)) {
         printf("✓ Queue started successfully!\n");
     } else {
