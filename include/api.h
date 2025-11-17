@@ -162,7 +162,6 @@ bool spotify_toggle_playback(SpotifyToken *token);
 
 bool spotify_skip_next_playback(SpotifyToken *token, const char *device_id);
 bool spotify_skip_previous_playback(SpotifyToken *token, const char *device_id);
-
-
+bool spotify_toggle_playback_shuffle(SpotifyToken *token, const char *device_id, bool state_shuffle);
 
 #endif

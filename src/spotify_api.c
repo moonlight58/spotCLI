@@ -502,21 +502,17 @@ bool spotify_toggle_playback(SpotifyToken *token) {
     return result;
 }
 
-/**
- * Allow to play multiples tracks like a queue tracks (it's an example for further implementation, but don't care for now)
- */
-void play_multiple_tracks(SpotifyToken *token) {
-    const char *track_uris[] = {
-        "spotify:track:4iV5W9uYEdYUVa79Axb7Rh",  // Smells Like Teen Spirit
-        "spotify:track:3n3Ppam7vgaVa1iaRUc9Lp",  // Mr. Brightside
-        "spotify:track:7qiZfU4dY1lWllzX7mPBI6"   // Shape of You
-    };
+bool spotify_toggle_playback_shuffle(SpotifyToken *token, const char *device_id, bool state_shuffle) {
+    char url[256];
 
-    printf("🎵 Playing queue of %zu tracks...\n", sizeof(track_uris) / sizeof(track_uris[0]));
-
-    if (spotify_start_playback(token, NULL, NULL, track_uris, 3)) {
-        printf("✓ Queue started successfully!\n");
+    if (device_id) {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/shuffle?state=%d&device_id=%s",
+                state_shuffle, device_id);
     } else {
-        printf("❌ Failed to start queue\n");
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/shuffle?state=%d", state_shuffle);
     }
+
+    return spotify_api_put_empty(token, url);
 }
