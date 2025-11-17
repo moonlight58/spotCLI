@@ -169,6 +169,7 @@ bool spotify_authorize(SpotifyToken *token) {
     const char *client_id = getenv("CLIENT_ID");
     const char *client_secret = getenv("CLIENT_SECRET");
     const char *redirect_uri = getenv("REDIRECT_URI");
+    const char *user_scopes = "user-library-read user-library-modify playlist-modify-public playlist-modify-private";
 
     if (!client_id || !client_secret || !redirect_uri) {
         fprintf(stderr, "Error: Missing environment variables (CLIENT_ID, CLIENT_SECRET, or REDIRECT_URI)\n");
@@ -177,7 +178,7 @@ bool spotify_authorize(SpotifyToken *token) {
 
     printf("Open this URL in your browser to authorize spotCLI:\n");
     printf("https://accounts.spotify.com/authorize?client_id=%s&response_type=code&redirect_uri=%s"
-            "&scope=user-library-read user-library-modify\n\n", client_id, redirect_uri);
+            "&scope=%s\n\n", client_id, redirect_uri, user_scopes);
 
     char auth_code[512];
     if (!start_callback_server(8888, auth_code, sizeof(auth_code))) {
