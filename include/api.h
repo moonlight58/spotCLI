@@ -160,4 +160,9 @@ bool spotify_resume_playback(SpotifyToken *token, const char *device_id);
 bool spotify_start_playback(SpotifyToken *token, const char *device_id, const char *context_uri, const char **uris, int uri_count);
 bool spotify_toggle_playback(SpotifyToken *token);
 
+bool spotify_skip_next_playback(SpotifyToken *token, const char *device_id);
+bool spotify_skip_previous_playback(SpotifyToken *token, const char *device_id);
+
+
+
 #endif

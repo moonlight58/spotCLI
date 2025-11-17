@@ -465,6 +465,20 @@ bool spotify_skip_next_playback(SpotifyToken *token, const char *device_id) {
     return spotify_api_post_empty(token, url);
 }
 
+bool spotify_skip_previous_playback(SpotifyToken *token, const char *device_id) {
+    char url[256];
+
+    if (device_id) {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/previous?device_id=%s",
+                device_id);
+    } else {
+        snprintf(url, sizeof(url), "https://api.spotify.com/v1/me/player/previous");
+    }
+
+    return spotify_api_post_empty(token, url);
+}
+
 /**
  * Toggle between play and pause based on current state
  */
