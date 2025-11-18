@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+char *context_repeat[] = {"off", "context", "track"};
+int context_index=0;
+
 // ===== PUBLIC API FUNCTIONS =====
 
 SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, int limit) {
@@ -400,10 +403,6 @@ bool spotify_resume_playback(SpotifyToken *token, const char *device_id) {
  * @param uris - Optional: Array of track URIs to play
  * @param uri_count - Number of URIs in the array
  * @return true if successful, false otherwise
- *
- * Examples:
- * - Play a playlist: context_uri = "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M"
- * - Play specific tracks: uris = {"spotify:track:4iV5W9uYEdYUVa79Axb7Rh", ...}
  */
 bool spotify_start_playback(SpotifyToken *token, const char *device_id,
                             const char *context_uri, const char **uris, int uri_count) {
@@ -514,5 +513,22 @@ bool spotify_toggle_playback_shuffle(SpotifyToken *token, const char *device_id,
                 "https://api.spotify.com/v1/me/player/shuffle?state=%d", state_shuffle);
     }
 
+    return spotify_api_put_empty(token, url);
+}
+
+bool spotify_toggle_playback_repeat(SpotifyToken *token, const char *device_id) {
+    char url[256];
+
+    if (device_id) {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/repeat?state=%s&device_id=%s",
+                context_repeat[context_index++], device_id);
+    } else {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/repeat?state=%s",
+                context_repeat[context_index++]);
+    }
+
+    context_index++;
     return spotify_api_put_empty(token, url);
 }

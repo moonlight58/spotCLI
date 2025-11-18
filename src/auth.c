@@ -169,7 +169,12 @@ bool spotify_authorize(SpotifyToken *token) {
     const char *client_id = getenv("CLIENT_ID");
     const char *client_secret = getenv("CLIENT_SECRET");
     const char *redirect_uri = getenv("REDIRECT_URI");
-    const char *user_scopes = "user-library-read user-library-modify playlist-modify-public playlist-modify-private user-read-playback-state user-modify-playback-state";
+    const char *user_scopes = "user-library-read \
+                               user-library-modify \
+                               playlist-modify-public \
+                               playlist-modify-private \
+                               user-read-playback-state \
+                               user-modify-playback-state";
 
     if (!client_id || !client_secret || !redirect_uri) {
         fprintf(stderr, "Error: Missing environment variables (CLIENT_ID, CLIENT_SECRET, or REDIRECT_URI)\n");

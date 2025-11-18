@@ -30,28 +30,12 @@ char* url_encode(const char *str);
 // ===== PARSER FUNCTIONS (spotify_parsers.c) =====
 
 /**
- * Parse track data from JSON object into SpotifyTrack struct
+ * Parse track, artist, playlist, device, player state data from JSON object into SpotifyTrack struct
  */
 void parse_track_json(struct json_object *item, SpotifyTrack *track);
-
-/**
- * Parse artist data from JSON object into SpotifyArtist struct
- */
 void parse_artist_json(struct json_object *item, SpotifyArtist *artist);
-
-/**
- * Parse playlist data from JSON object into SpotifyPlaylist struct
- */
 void parse_playlist_json(struct json_object *item, SpotifyPlaylist *playlist);
-
-/**
- * Parse device data from JSON object into SpotifyDevice struct
- */
 void parse_device_json(struct json_object *device_obj, SpotifyDevice *device);
-
-/**
- * Parse player state from JSON object into SpotifyPlayerState struct
- */
 void parse_player_state_json(struct json_object *root, SpotifyPlayerState *state);
 
 /**
