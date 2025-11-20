@@ -56,4 +56,9 @@ bool spotify_api_post(SpotifyToken *token, const char *url, const char *json_dat
  */
 bool spotify_api_post_empty(SpotifyToken *token, const char *url);
 
+/**
+ * Parse queue data from JSON object into SpotifyQueue struct
+ */
+void parse_queue_json(struct json_object *root, SpotifyQueue *queue);
+
 #endif // SPOTIFY_INTERNAL_H

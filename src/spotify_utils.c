@@ -32,6 +32,14 @@ void spotify_free_player_state(SpotifyPlayerState *state) {
     free(state);
 }
 
+void spotify_free_queue(SpotifyQueue *queue) {
+    if (!queue) return;
+    if (queue->queue) {
+        free(queue->queue);
+    }
+    free(queue);
+}
+
 void spotify_print_track(SpotifyTrack *track, int index) {
     printf("%d. %s\n", index, track->name);
     printf("   Artist: %s\n", track->artist);
@@ -112,6 +120,52 @@ void spotify_print_player_state(SpotifyPlayerState *state) {
     printf("║ Device: %s (%s)\n", state->device.device_name, state->device.device_type);
     printf("║ Volume: %d%%\n", state->device.volume_percent);
     printf("║ Active: %s\n", state->device.is_active ? "Yes" : "No");
+    
+    printf("╚════════════════════════════════════════════════════════════════╝\n");
+}
+
+void spotify_print_queue(SpotifyQueue *queue) {
+    if (!queue) {
+        printf("No queue information available\n");
+        return;
+    }
+    
+    printf("╔════════════════════════════════════════════════════════════════╗\n");
+    printf("║                      PLAYBACK QUEUE                            ║\n");
+    printf("╠════════════════════════════════════════════════════════════════╣\n");
+    
+    // Currently playing
+    if (strlen(queue->currently_playing.name) > 0) {
+        printf("║ 🎵 NOW PLAYING:\n");
+        printf("║    %s\n", queue->currently_playing.name);
+        printf("║    by %s\n", queue->currently_playing.artist);
+        printf("║    from %s\n", queue->currently_playing.album);
+        printf("╠════════════════════════════════════════════════════════════════╣\n");
+    }
+    
+    // Queue
+    if (queue->queue_count > 0) {
+        printf("║ 📋 NEXT IN QUEUE (%d track%s):\n", 
+               queue->queue_count, 
+               queue->queue_count == 1 ? "" : "s");
+        printf("║\n");
+        
+        for (int i = 0; i < queue->queue_count; i++) {
+            printf("║ %d. %s\n", i + 1, queue->queue[i].name);
+            printf("║    by %s", queue->queue[i].artist);
+            
+            // Duration
+            int duration_min = queue->queue[i].duration_ms / 60000;
+            int duration_sec = (queue->queue[i].duration_ms / 1000) % 60;
+            printf(" (%d:%02d)\n", duration_min, duration_sec);
+            
+            if (i < queue->queue_count - 1) {
+                printf("║\n");
+            }
+        }
+    } else {
+        printf("║ 📋 Queue is empty\n");
+    }
     
     printf("╚════════════════════════════════════════════════════════════════╝\n");
 }

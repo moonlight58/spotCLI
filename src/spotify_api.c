@@ -619,6 +619,70 @@ bool spotify_set_playback_volume(SpotifyToken *token, const char *device_id, int
                 "https://api.spotify.com/v1/me/player/volume?volume_percent=%d&device_id=%s",
                 volume, device_id);
     } else {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/volume?volume_percent=%d",
+                volume);
     }
     return spotify_api_put_empty(token, url);
+}
+
+/**
+ * Get the current user's queue
+ */
+SpotifyQueue* spotify_get_queue(SpotifyToken *token) {
+    if (!token) {
+        fprintf(stderr, "Invalid token parameter\n");
+        return NULL;
+    }
+
+    const char *url = "https://api.spotify.com/v1/me/player/queue";
+
+    struct json_object *root = spotify_api_get(token, url);
+    if (!root) {
+        fprintf(stderr, "Failed to get queue (no active device or API error)\n");
+        return NULL;
+    }
+
+    // Check if response is empty
+    if (json_object_get_type(root) == json_type_null) {
+        json_object_put(root);
+        fprintf(stderr, "No active playback device found\n");
+        return NULL;
+    }
+
+    SpotifyQueue *queue = malloc(sizeof(SpotifyQueue));
+    if (!queue) {
+        fprintf(stderr, "Failed to allocate memory for queue\n");
+        json_object_put(root);
+        return NULL;
+    }
+
+    parse_queue_json(root, queue);
+    json_object_put(root);
+
+    return queue;
+}
+
+/**
+ * Add an item to the end of the user's current playback queue
+ */
+bool spotify_add_to_queue(SpotifyToken *token, const char *uri, const char *device_id) {
+    if (!token || !uri) {
+        fprintf(stderr, "Invalid parameters for add_to_queue\n");
+        return false;
+    }
+
+    char url[512];
+    
+    if (device_id) {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/queue?uri=%s&device_id=%s",
+                uri, device_id);
+    } else {
+        snprintf(url, sizeof(url),
+                "https://api.spotify.com/v1/me/player/queue?uri=%s",
+                uri);
+    }
+
+    return spotify_api_post_empty(token, url);
 }

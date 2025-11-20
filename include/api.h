@@ -97,6 +97,12 @@ typedef struct {
     SpotifyDevice device;
 } SpotifyPlayerState;
 
+typedef struct {
+    SpotifyTrack currently_playing;
+    SpotifyTrack *queue;
+    int queue_count;
+} SpotifyQueue;
+
 // Search for tracks, artists, artists top tracks
 SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, int limit);
 SpotifyArtistList* spotify_search_artists(SpotifyToken *token, const char *query, int limit);
@@ -159,4 +165,36 @@ bool spotify_transfer_playback(SpotifyToken *token, const char *device_id, bool 
 SpotifyDevice* spotify_get_available_devices(SpotifyToken *token, int *device_count);
 
 bool spotify_set_playback_volume(SpotifyToken *token, const char *device_id, int volume);
+
+/**
+ * Get the current user's queue
+ * 
+ * @param token - Valid Spotify token
+ * @return SpotifyQueue struct containing currently playing track and queue, or NULL on error
+ */
+SpotifyQueue* spotify_get_queue(SpotifyToken *token);
+
+/**
+ * Add an item to the end of the user's current playback queue
+ * 
+ * @param token - Valid Spotify token
+ * @param uri - Spotify URI of the track/episode to add (e.g., "spotify:track:4iV5W9uYEdYUVa79Axb7Rh")
+ * @param device_id - Optional: specific device ID (NULL for current active device)
+ * @return true if successful, false otherwise
+ */
+bool spotify_add_to_queue(SpotifyToken *token, const char *uri, const char *device_id);
+
+/**
+ * Free queue memory
+ * 
+ * @param queue - Queue to free
+ */
+void spotify_free_queue(SpotifyQueue *queue);
+
+/**
+ * Print queue information
+ * 
+ * @param queue - Queue to print
+ */
+void spotify_print_queue(SpotifyQueue *queue);
 #endif

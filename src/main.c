@@ -94,9 +94,11 @@ void print_menu() {
     printf("6. View artist's top tracks\n");
     printf("7. View artist's albums\n");
     printf("8. View your playlists\n");
+    printf("9. View playback queue\n");
+    printf("10. Add track to queue\n");
+    printf("11. Add artist track to queue\n");
     printf("Choose an option: ");
 }
-
 void search_artists(SpotifyToken *token, const char *query) {
     printf("\nSearching for artists matching '%s'...\n", query);
     SpotifyArtistList *results = spotify_search_artists(token, query, 10);
@@ -115,6 +117,160 @@ void search_artists(SpotifyToken *token, const char *query) {
     }
 
     spotify_free_artist_list(results);
+}
+
+void view_queue(SpotifyToken *token) {
+    printf("\nFetching playback queue...\n");
+    
+    SpotifyQueue *queue = spotify_get_queue(token);
+    
+    if (!queue) {
+        printf("Failed to get queue. Make sure Spotify is playing on an active device.\n");
+        return;
+    }
+    
+    spotify_print_queue(queue);
+    spotify_free_queue(queue);
+}
+
+void add_track_to_queue_interactive(SpotifyToken *token) {
+    printf("\n=== Add Track to Queue ===\n");
+    printf("Enter search query: ");
+    
+    char query[256];
+    if (!fgets(query, sizeof(query), stdin)) {
+        printf("Invalid input.\n");
+        return;
+    }
+    query[strcspn(query, "\n")] = '\0';
+    
+    // Search for tracks
+    printf("\nSearching for '%s'...\n", query);
+    SpotifyTrackList *results = spotify_search_tracks(token, query, 10);
+    
+    if (!results || results->count == 0) {
+        printf("No tracks found.\n");
+        if (results) spotify_free_track_list(results);
+        return;
+    }
+    
+    printf("\nFound %d results:\n\n", results->count);
+    
+    for (int i = 0; i < results->count; i++) {
+        spotify_print_track(&results->tracks[i], i + 1);
+        printf("\n");
+    }
+    
+    printf("Enter track number to add to queue (or 0 to cancel): ");
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        printf("Invalid input.\n");
+        spotify_free_track_list(results);
+        return;
+    }
+    getchar(); // consume newline
+    
+    if (choice > 0 && choice <= results->count) {
+        const char *track_uri = results->tracks[choice - 1].uri;
+        const char *track_name = results->tracks[choice - 1].name;
+        
+        printf("Adding '%s' to queue...\n", track_name);
+        if (spotify_add_to_queue(token, track_uri, NULL)) {
+            printf("✅ Track added to queue successfully!\n");
+        } else {
+            printf("❌ Failed to add track to queue.\n");
+        }
+    }
+    
+    spotify_free_track_list(results);
+}
+
+void add_artist_track_to_queue(SpotifyToken *token) {
+    printf("\n=== Add Artist Track to Queue ===\n");
+    printf("Enter artist name: ");
+    
+    char query[256];
+    if (!fgets(query, sizeof(query), stdin)) {
+        printf("Invalid input.\n");
+        return;
+    }
+    query[strcspn(query, "\n")] = '\0';
+    
+    // Search for artists
+    printf("\nSearching for artists matching '%s'...\n", query);
+    SpotifyArtistList *results = spotify_search_artists(token, query, 10);
+    
+    if (!results || results->count == 0) {
+        printf("No artists found.\n");
+        if (results) spotify_free_artist_list(results);
+        return;
+    }
+    
+    printf("\nFound %d artist(s):\n\n", results->count);
+    
+    for (int i = 0; i < results->count; i++) {
+        spotify_print_artist(&results->artists[i], i + 1);
+        printf("\n");
+    }
+    
+    printf("Enter artist number (or 0 to cancel): ");
+    int artist_choice;
+    if (scanf("%d", &artist_choice) != 1) {
+        printf("Invalid input.\n");
+        spotify_free_artist_list(results);
+        return;
+    }
+    getchar(); // consume newline
+    
+    if (artist_choice <= 0 || artist_choice > results->count) {
+        spotify_free_artist_list(results);
+        return;
+    }
+    
+    const char *artist_id = results->artists[artist_choice - 1].id;
+    const char *artist_name = results->artists[artist_choice - 1].name;
+    
+    spotify_free_artist_list(results);
+    
+    // Get artist's top tracks
+    printf("\nFetching top tracks for %s...\n", artist_name);
+    SpotifyTrackList *tracks = spotify_get_artist_top_tracks(token, artist_id, "US");
+    
+    if (!tracks || tracks->count == 0) {
+        printf("No tracks found.\n");
+        if (tracks) spotify_free_track_list(tracks);
+        return;
+    }
+    
+    printf("\n🎵 Top tracks by %s:\n\n", artist_name);
+    
+    for (int i = 0; i < tracks->count; i++) {
+        spotify_print_track(&tracks->tracks[i], i + 1);
+        printf("\n");
+    }
+    
+    printf("Enter track number to add to queue (or 0 to cancel): ");
+    int track_choice;
+    if (scanf("%d", &track_choice) != 1) {
+        printf("Invalid input.\n");
+        spotify_free_track_list(tracks);
+        return;
+    }
+    getchar(); // consume newline
+    
+    if (track_choice > 0 && track_choice <= tracks->count) {
+        const char *track_uri = tracks->tracks[track_choice - 1].uri;
+        const char *track_name = tracks->tracks[track_choice - 1].name;
+        
+        printf("Adding '%s' to queue...\n", track_name);
+        if (spotify_add_to_queue(token, track_uri, NULL)) {
+            printf("✅ Track added to queue successfully!\n");
+        } else {
+            printf("❌ Failed to add track to queue.\n");
+        }
+    }
+    
+    spotify_free_track_list(tracks);
 }
 
 void view_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *artist_name) {
@@ -420,6 +576,15 @@ void interactive_mode(SpotifyToken *token) {
             }
             case 8:  // VIEW USER'S PLAYLISTS
                 view_users_playlists(token, 20, 0);
+                break;
+            case 9:  // VIEW QUEUE
+                view_queue(token);
+                break;
+            case 10:  // ADD TRACK TO QUEUE
+                add_track_to_queue_interactive(token);
+                break;
+            case 11:  // ADD ARTIST TRACK TO QUEUE
+                add_artist_track_to_queue(token);
                 break;
             default:
                 printf("Invalid option. Please try again.\n");

@@ -287,3 +287,34 @@ void parse_player_state_json(struct json_object *root, SpotifyPlayerState *state
         parse_device_json(device, &state->device);
     }
 }
+
+/**
+ * Parse queue data from JSON object into SpotifyQueue struct
+ */
+void parse_queue_json(struct json_object *root, SpotifyQueue *queue) {
+    memset(queue, 0, sizeof(SpotifyQueue));
+    
+    // Parse currently playing track
+    struct json_object *currently_playing;
+    if (json_object_object_get_ex(root, "currently_playing", &currently_playing) && currently_playing) {
+        parse_track_json(currently_playing, &queue->currently_playing);
+    }
+    
+    // Parse queue array
+    struct json_object *queue_array;
+    if (json_object_object_get_ex(root, "queue", &queue_array)) {
+        int count = json_object_array_length(queue_array);
+        
+        if (count > 0) {
+            queue->queue = malloc(sizeof(SpotifyTrack) * count);
+            if (queue->queue) {
+                queue->queue_count = count;
+                
+                for (int i = 0; i < count; i++) {
+                    struct json_object *item = json_object_array_get_idx(queue_array, i);
+                    parse_track_json(item, &queue->queue[i]);
+                }
+            }
+        }
+    }
+}

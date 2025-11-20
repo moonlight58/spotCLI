@@ -174,7 +174,8 @@ bool spotify_authorize(SpotifyToken *token) {
                                playlist-modify-public \
                                playlist-modify-private \
                                user-read-playback-state \
-                               user-modify-playback-state";
+                               user-modify-playback-state \
+                               user-read-currently-playing";
 
     if (!client_id || !client_secret || !redirect_uri) {
         fprintf(stderr, "Error: Missing environment variables (CLIENT_ID, CLIENT_SECRET, or REDIRECT_URI)\n");
