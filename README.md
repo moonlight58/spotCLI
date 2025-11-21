@@ -268,11 +268,11 @@ The app requests the following Spotify scopes:
 - [x] Tracks from an artist search
 - [x] Album search
 - [ ] Playlist management
-  - [ ] Create Playlist
-  - [ ] Delete Playlist
-  - [ ] Add track into Playlist
-  - [ ] Remove track from Playlist
-  - [ ] Change info about Playlist (title/description/visibility/collaborative)
+  - [x] Create Playlist
+  - [x] Delete Playlist
+  - [x] Add track into Playlist
+  - [x] Remove track from Playlist
+  - [x] Change info about Playlist (title/description/visibility/collaborative)
 - [ ] Player functionnality
   - [x] Audio preview
   - [x] Start/Resume
@@ -282,8 +282,13 @@ The app requests the following Spotify scopes:
   - [x] Set Playback Volume
   - [x] User's Queue Tracks
   - [x] Change playback device
-- [ ] Create custom playlists
-- [ ] Remove tracks from library
+- [x] Create custom playlists
+- [x] Remove tracks from library
+- [ ] Album search & detailed album info (tracks in album)
+- [ ] User profile info (followers, public playlists)
+- [ ] Recommendations songs (get recommendations based on seeds)
+- [ ] Audio features (tempo, energy, danceability of tracks)
+- [ ] Recently played (get user's listening history)
 - [ ] Batch operations
 - [ ] Configuration file for preferences
 - [ ] Shell completions (bash/zsh/fish)
