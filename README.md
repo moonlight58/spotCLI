@@ -261,6 +261,11 @@ The app requests the following Spotify scopes:
 - [x] Tracks from an artist search
 - [x] Album search
 - [ ] Playlist management
+  - [ ] Create Playlist
+  - [ ] Delete Playlist
+  - [ ] Add track into Playlist
+  - [ ] Remove track from Playlist
+  - [ ] Change info about Playlist (title/description/visibility/collaborative)
 - [ ] Player functionnality
   - [x] Audio preview
   - [x] Start/Resume
@@ -268,7 +273,7 @@ The app requests the following Spotify scopes:
   - [x] Toggle Shuffle
   - [x] Skip to Next/Previous
   - [x] Set Playback Volume
-  - [ ] User's Queue Tracks
+  - [x] User's Queue Tracks
   - [x] Change playback device
 - [ ] Create custom playlists
 - [ ] Remove tracks from library
