@@ -147,7 +147,7 @@ make help     # Show all available commands
 | `--track` | `-t` | Search for tracks (default) |
 | `--artist` | `-a` | Search for artists |
 | `--album` | `-A` | Search for albums |
-| `--playlist` | `-p` | Search for playlists (coming soon) |
+| `--playlist` | `-p` | Search for playlists |
 | `--user` | `-u` | Search for users (coming soon) |
 | `--audiobook` | `-b` | Search for audiobooks (coming soon) |
 | `--list` | `-l` | List your saved tracks |
