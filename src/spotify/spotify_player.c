@@ -1,8 +1,8 @@
 #include "spotify/spotify_player.h"
 #include <stdio.h>
 
-char *context_repeat[] = {"off", "context", "track"};
-int context_index=0;
+static char *context_repeat[] = {"off", "context", "track"};
+static int context_index = 0;
 
 SpotifyPlayerState* spotify_get_player_state(SpotifyToken *token) {
     const char *url = "https://api.spotify.com/v1/me/player";
