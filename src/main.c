@@ -107,6 +107,7 @@ void print_menu() {
     printf("13. Manage playlist (edit details)\n");
     printf("14. Add track to playlist\n");
     printf("15. Remove track from playlist\n");
+    printf("16. Unfollow playlist\n");
     printf("Choose an option: ");
 }
 
@@ -609,6 +610,9 @@ void interactive_mode(SpotifyToken *token) {
             case 15:  // REMOVE TRACK FROM PLAYLIST
                 remove_track_from_playlist_interactive(token);
                 break;
+            case 16:  // REMOVE PLAYLIST FROM USER FOLLOW 
+                unfollow_playlist_interactive(token);
+                break;
             default:
                 printf("Invalid option. Please try again.\n");
         }
@@ -857,8 +861,7 @@ void manage_playlist_interactive(SpotifyToken *token) {
     printf("2. Change description\n");
     printf("3. Toggle public/private\n");
     printf("4. Toggle collaborative\n");
-    printf("5. Unfollow playlist\n");
-    printf("6. Cancel\n");
+    printf("5. Cancel\n");
     printf("Choice: ");
     
     int action;
@@ -908,9 +911,6 @@ void manage_playlist_interactive(SpotifyToken *token) {
             do_update = true;
             printf("Setting collaborative to %s...\n", new_collab ? "on" : "off");
             break;
-        }
-        case 5: {
-            
         }
         default:
             break;
@@ -1081,7 +1081,55 @@ void remove_track_from_playlist_interactive(SpotifyToken *token) {
 }
 
 void unfollow_playlist_interactive(SpotifyToken *token) {
-    printf("\n=== Unfollowing Playlist ===\n");
-
-    bool *playlist
+    printf("\n=== Unfollow Playlist ===\n");
+    
+    // First show user's playlists
+    SpotifyPlaylistList *playlists = spotify_get_user_playlists(token, 20, 0);
+    
+    if (!playlists || playlists->count == 0) {
+        printf("No playlists found.\n");
+        if (playlists) spotify_free_playlist_list(playlists);
+        return;
+    }
+    
+    printf("\nYour playlists:\n\n");
+    for (int i = 0; i < playlists->count; i++) {
+        spotify_print_playlist(&playlists->playlists[i], i + 1);
+        printf("\n");
+    }
+    
+    printf("Enter playlist number to unfollow (or 0 to cancel): ");
+    int choice;
+    if (scanf("%d", &choice) != 1) {
+        printf("Invalid input.\n");
+        spotify_free_playlist_list(playlists);
+        return;
+    }
+    getchar();
+    
+    if (choice <= 0 || choice > playlists->count) {
+        spotify_free_playlist_list(playlists);
+        return;
+    }
+    
+    const char *playlist_id = playlists->playlists[choice - 1].id;
+    const char *playlist_name = playlists->playlists[choice - 1].name;
+    
+    printf("\nAre you sure you want to unfollow '%s'? (y/n): ", playlist_name);
+    char confirm;
+    if (scanf(" %c", &confirm) != 1 || (confirm != 'y' && confirm != 'Y')) {
+        printf("Cancelled.\n");
+        spotify_free_playlist_list(playlists);
+        return;
+    }
+    getchar();
+    
+    printf("Unfollowing playlist...\n");
+    if (spotify_unfollow_playlist(token, playlist_id)) {
+        printf("✅ Playlist unfollowed successfully!\n");
+    } else {
+        printf("❌ Failed to unfollow playlist.\n");
+    }
+    
+    spotify_free_playlist_list(playlists);
 }

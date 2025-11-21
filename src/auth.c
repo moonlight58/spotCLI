@@ -9,6 +9,11 @@
 #include <unistd.h>
 #include <time.h>
 
+// Forward declarations
+static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream);
+static void ensure_token_dir();
+static bool spotify_token_is_expired(SpotifyToken *token);
+
 bool spotify_get_access_token(SpotifyToken *token) {
     if (!spotify_load_token(token)) {
         printf("No token found, starting authorization...\n");
@@ -30,6 +35,7 @@ bool spotify_is_authenticated() {
     
     FILE *f = fopen(token_path, "r");
     if (!f) return false;
+    fclose(f);
     return true;
 }
 
@@ -97,7 +103,7 @@ bool spotify_refresh_token(SpotifyToken *token) {
     struct json_object *json = json_tokener_parse(response);
     strcpy(token->access_token, json_object_get_string(json_object_object_get(json, "access_token")));
     token->expires_in = json_object_get_int64(json_object_object_get(json, "expires_in"));
-    token->obtained_at = time(NULL);  // ADD THIS LINE
+    token->obtained_at = time(NULL);
     json_object_put(json);
 
     spotify_save_token(token);
@@ -123,8 +129,8 @@ bool spotify_save_token(SpotifyToken *token) {
     return true;
 }
 
-
-bool spotify_token_is_expired(SpotifyToken *token) {
+// Helper function to check if token is expired
+static bool spotify_token_is_expired(SpotifyToken *token) {
     // If obtained_at is not set (0 or invalid), consider token valid
     // This prevents segfault when obtained_at is uninitialized
     if (token->obtained_at <= 0) {
@@ -156,9 +162,6 @@ char* get_token_path() {
     return path;
 }
 
-
-char* start_callback_server(int port, char *code_buffer, size_t buffer_size);
-
 bool spotify_authorize(SpotifyToken *token) {
     
     if (!load_dotenv(".env")) {
@@ -187,6 +190,7 @@ bool spotify_authorize(SpotifyToken *token) {
             "&scope=%s\n\n", client_id, redirect_uri, user_scopes);
 
     char auth_code[512];
+    char *start_callback_server(int port, char *code_buffer, size_t buffer_size);
     if (!start_callback_server(8888, auth_code, sizeof(auth_code))) {
         fprintf(stderr, "Failed to start callback server\n");
         return false;
@@ -247,7 +251,6 @@ static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream)
     strncat((char *)stream, ptr, realsize);
     return realsize;
 }
-
 
 // Create token directory if it doesn't exist
 static void ensure_token_dir() {

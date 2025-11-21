@@ -61,6 +61,35 @@ typedef struct { // List of all the playlists
     int total;
 } SpotifyPlaylistList;
 
+// Full playlist with tracks and details
+typedef struct {
+    char id[64];
+    char name[256];
+    char description[1024];
+    char uri[128];
+    char snapshot_id[128];
+    bool is_public;
+    bool is_collaborative;
+    char owner_id[64];
+    char owner_name[256];
+    int tracks_count;
+    SpotifyTrack *tracks;  // Array of tracks (if fetched)
+} SpotifyPlaylistFull;
+
+// Structure for updating playlist details
+typedef struct {
+    const char *name;
+    const char *description;
+    bool *is_public;
+    bool *is_collaborative;
+} SpotifyPlaylistUpdate;
+
+// Result from playlist operations
+typedef struct {
+    bool success;
+    char snapshot_id[128];
+} SpotifyPlaylistResult;
+
 typedef struct {
     char device_id[64];
     char device_name[256];
@@ -113,10 +142,18 @@ bool spotify_save_tracks(SpotifyToken *token, const char **track_ids, int count)
 
 // Get user's saved tracks, artists top tracks, artist's albums, user's albums, player's state
 SpotifyTrackList* spotify_get_saved_tracks(SpotifyToken *token, int limit, int offset);
-SpotifyTrackList* spotify_get_artist_top_tracks(SpotifyToken *token, const char *artist_id, const char *market);
 SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *artist_id);
 SpotifyPlaylistList* spotify_get_user_playlists(SpotifyToken *token, int limit, int offset);
 SpotifyPlayerState* spotify_get_player_state(SpotifyToken *token);
+
+// Playlist management
+char* spotify_get_current_user_id(SpotifyToken *token);
+SpotifyPlaylistFull* spotify_create_playlist(SpotifyToken *token, const char *name, const char *description, bool is_public, bool is_collaborative);
+SpotifyPlaylistFull* spotify_get_playlist(SpotifyToken *token, const char *playlist_id, bool fetch_tracks, int track_limit);
+bool spotify_update_playlist(SpotifyToken *token, const char *playlist_id, SpotifyPlaylistUpdate *updates);
+SpotifyPlaylistResult* spotify_add_tracks_to_playlist(SpotifyToken *token, const char *playlist_id, const char **track_uris, int count, int position);
+SpotifyPlaylistResult* spotify_remove_tracks_from_playlist(SpotifyToken *token, const char *playlist_id, const char **track_uris, int count, const char *snapshot_id);
+bool spotify_unfollow_playlist(SpotifyToken *token, const char *playlist_id);
 
 // Free track list, artist list, album list, player state, user's playlist memory
 void spotify_free_track_list(SpotifyTrackList *list);
@@ -124,12 +161,15 @@ void spotify_free_artist_list(SpotifyArtistList *list);
 void spotify_free_album_list(SpotifyAlbumList *list);
 void spotify_free_player_state(SpotifyPlayerState *state);
 void spotify_free_playlist_list(SpotifyPlaylistList *list);
+void spotify_free_playlist_full(SpotifyPlaylistFull *playlist);
+void spotify_free_playlist_result(SpotifyPlaylistResult *result);
 
 // Helper to print track, artist, album, user's playlist, player state info
 void spotify_print_track(SpotifyTrack *track, int index);
 void spotify_print_artist(SpotifyArtist *artist, int index);
 void spotify_print_album(SpotifyAlbum *album, int index);
 void spotify_print_playlist(SpotifyPlaylist *playlist, int index);
+void spotify_print_playlist_full(SpotifyPlaylistFull *playlist);
 void spotify_print_player_state(SpotifyPlayerState *state);
 void spotify_print_device(SpotifyDevice *device, int index);
 
@@ -143,7 +183,6 @@ bool spotify_toggle_playback(SpotifyToken *token);
 bool spotify_skip_next_playback(SpotifyToken *token, const char *device_id);
 bool spotify_skip_previous_playback(SpotifyToken *token, const char *device_id);
 bool spotify_toggle_playback_shuffle(SpotifyToken *token, const char *device_id, bool state_shuffle);
-
 
 /**
  * Transfer playback to a different device
@@ -197,4 +236,5 @@ void spotify_free_queue(SpotifyQueue *queue);
  * @param queue - Queue to print
  */
 void spotify_print_queue(SpotifyQueue *queue);
+
 #endif

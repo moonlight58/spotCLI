@@ -177,3 +177,61 @@ void spotify_print_device(SpotifyDevice *device, int index) {
     printf("   Active: %s\n", device->is_active ? "✓ Yes" : "No");
     printf("   ID: %s\n", device->device_id);
 }
+
+void spotify_free_playlist_full(SpotifyPlaylistFull *playlist) {
+    if (!playlist) return;
+    if (playlist->tracks) {
+        free(playlist->tracks);
+    }
+    free(playlist);
+}
+
+void spotify_free_playlist_result(SpotifyPlaylistResult *result) {
+    if (!result) return;
+    free(result);
+}
+
+void spotify_print_playlist_full(SpotifyPlaylistFull *playlist) {
+    if (!playlist) {
+        printf("No playlist data available\n");
+        return;
+    }
+    
+    printf("\n╔════════════════════════════════════════════════════════════════╗\n");
+    printf("║                      PLAYLIST DETAILS                          ║\n");
+    printf("╠════════════════════════════════════════════════════════════════╣\n");
+    
+    printf("║ Name: %s\n", playlist->name);
+    
+    if (strlen(playlist->description) > 0) {
+        printf("║ Description: %s\n", playlist->description);
+    }
+    
+    printf("║ Owner: %s\n", playlist->owner_name);
+    printf("║ Public: %s\n", playlist->is_public ? "Yes" : "No");
+    printf("║ Collaborative: %s\n", playlist->is_collaborative ? "Yes" : "No");
+    printf("║ Total tracks: %d\n", playlist->tracks_count);
+    printf("║ ID: %s\n", playlist->id);
+    
+    if (playlist->tracks && playlist->tracks_count > 0) {
+        printf("╠════════════════════════════════════════════════════════════════╣\n");
+        printf("║ TRACKS:\n");
+        printf("║\n");
+        
+        for (int i = 0; i < playlist->tracks_count; i++) {
+            printf("║ %d. %s\n", i + 1, playlist->tracks[i].name);
+            printf("║    by %s", playlist->tracks[i].artist);
+            
+            // Duration
+            int duration_min = playlist->tracks[i].duration_ms / 60000;
+            int duration_sec = (playlist->tracks[i].duration_ms / 1000) % 60;
+            printf(" (%d:%02d)\n", duration_min, duration_sec);
+            
+            if (i < playlist->tracks_count - 1) {
+                printf("║\n");
+            }
+        }
+    }
+    
+    printf("╚════════════════════════════════════════════════════════════════╝\n");
+}

@@ -318,3 +318,98 @@ void parse_queue_json(struct json_object *root, SpotifyQueue *queue) {
         }
     }
 }
+
+/**
+ * Parse full playlist data from JSON object into SpotifyPlaylistFull struct
+ */
+void parse_playlist_full_json(struct json_object *root, SpotifyPlaylistFull *playlist) {
+    struct json_object *obj;
+    
+    memset(playlist, 0, sizeof(SpotifyPlaylistFull));
+    
+    // ID
+    if (json_object_object_get_ex(root, "id", &obj)) {
+        strncpy(playlist->id, json_object_get_string(obj), sizeof(playlist->id) - 1);
+    }
+    
+    // Name
+    if (json_object_object_get_ex(root, "name", &obj)) {
+        strncpy(playlist->name, json_object_get_string(obj), sizeof(playlist->name) - 1);
+    }
+    
+    // Description
+    if (json_object_object_get_ex(root, "description", &obj) && obj) {
+        const char *desc = json_object_get_string(obj);
+        if (desc) {
+            strncpy(playlist->description, desc, sizeof(playlist->description) - 1);
+        }
+    }
+    
+    // URI
+    if (json_object_object_get_ex(root, "uri", &obj)) {
+        strncpy(playlist->uri, json_object_get_string(obj), sizeof(playlist->uri) - 1);
+    }
+    
+    // Snapshot ID
+    if (json_object_object_get_ex(root, "snapshot_id", &obj)) {
+        strncpy(playlist->snapshot_id, json_object_get_string(obj), sizeof(playlist->snapshot_id) - 1);
+    }
+    
+    // Public
+    if (json_object_object_get_ex(root, "public", &obj)) {
+        playlist->is_public = json_object_get_boolean(obj);
+    }
+    
+    // Collaborative
+    if (json_object_object_get_ex(root, "collaborative", &obj)) {
+        playlist->is_collaborative = json_object_get_boolean(obj);
+    }
+    
+    // Owner
+    struct json_object *owner;
+    if (json_object_object_get_ex(root, "owner", &owner)) {
+        if (json_object_object_get_ex(owner, "id", &obj)) {
+            strncpy(playlist->owner_id, json_object_get_string(obj), sizeof(playlist->owner_id) - 1);
+        }
+        if (json_object_object_get_ex(owner, "display_name", &obj) && obj) {
+            const char *name = json_object_get_string(obj);
+            if (name) {
+                strncpy(playlist->owner_name, name, sizeof(playlist->owner_name) - 1);
+            }
+        }
+    }
+    
+    // Tracks
+    struct json_object *tracks_obj;
+    if (json_object_object_get_ex(root, "tracks", &tracks_obj)) {
+        // Get total count
+        if (json_object_object_get_ex(tracks_obj, "total", &obj)) {
+            playlist->tracks_count = json_object_get_int(obj);
+        }
+        
+        // Parse track items if available
+        struct json_object *items;
+        if (json_object_object_get_ex(tracks_obj, "items", &items)) {
+            int count = json_object_array_length(items);
+            
+            if (count > 0) {
+                playlist->tracks = malloc(sizeof(SpotifyTrack) * count);
+                if (playlist->tracks) {
+                    playlist->tracks_count = count;  // Update with actual count
+                    
+                    for (int i = 0; i < count; i++) {
+                        struct json_object *item = json_object_array_get_idx(items, i);
+                        struct json_object *track;
+                        
+                        // Handle both direct tracks and wrapped tracks (playlist format)
+                        if (json_object_object_get_ex(item, "track", &track)) {
+                            parse_track_json(track, &playlist->tracks[i]);
+                        } else {
+                            parse_track_json(item, &playlist->tracks[i]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
