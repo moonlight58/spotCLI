@@ -1092,8 +1092,9 @@ int main(int argc, char *argv[]) {
         search_artists(&token, query);
     } else if (strcmp(search_type, "album") == 0) {
         search_artist_and_view_albums(&token, query);
-    } else if (strcmp(search_type, "playlist") == 0 ||
-            strcmp(search_type, "user") == 0 ||
+    } else if (strcmp(search_type, "playlist") == 0) {
+        view_users_playlists(&token, limit=10, offset=0);
+    } else if (strcmp(search_type, "user") == 0 ||
             strcmp(search_type, "audiobook") == 0) {
         printf("⚠️  Search type '%s' not yet implemented.\n", search_type);
         printf("Currently supported: track (-t), artist (-a)\n");

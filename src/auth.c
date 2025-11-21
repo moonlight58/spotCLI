@@ -233,7 +233,7 @@ bool spotify_authorize(SpotifyToken *token) {
     strcpy(token->access_token, json_object_get_string(access));
     strcpy(token->refresh_token, json_object_get_string(refresh));
     token->expires_in = json_object_get_int64(expires);
-    token->obtained_at = time(NULL);  // ADD THIS LINE
+    token->obtained_at = time(NULL);
 
     json_object_put(json);
 
@@ -243,8 +243,7 @@ bool spotify_authorize(SpotifyToken *token) {
 }
 
 static size_t write_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
-
-size_t realsize = size * nmemb;
+    size_t realsize = size * nmemb;
     strncat((char *)stream, ptr, realsize);
     return realsize;
 }
