@@ -4,69 +4,6 @@
 #include "spotify/spotify_internal.h"
 #include <stdbool.h>
 
-// ===== ALBUM STRUCTURES =====
-
-typedef struct {
-    char id[64];
-    char name[256];
-    char artist[256];
-    char release_date[16];  // YYYY-MM-DD
-    int total_tracks;
-} SpotifyAlbumInfo;
-
-typedef struct {
-    SpotifyTrack *tracks;
-    int count;
-    SpotifyAlbumInfo album_info;
-} SpotifyAlbumDetailed;
-
-// ===== USER PROFILE STRUCTURES =====
-
-typedef struct {
-    char user_id[64];
-    char display_name[256];
-    int followers;
-    int public_playlists;
-    char profile_url[512];
-    char profile_image_url[512];
-} SpotifyUserProfile;
-
-// ===== AUDIO FEATURES STRUCTURES =====
-
-typedef struct {
-    char track_id[64];
-    char track_name[256];
-    float acousticness;      // 0.0 to 1.0
-    float danceability;      // 0.0 to 1.0
-    float energy;            // 0.0 to 1.0
-    float instrumentalness;  // 0.0 to 1.0
-    float liveness;          // 0.0 to 1.0
-    float loudness;          // -60 to 0 dB
-    float speechiness;       // 0.0 to 1.0
-    float valence;           // 0.0 to 1.0 (musical positiveness)
-    int tempo;               // BPM
-    int time_signature;      // e.g., 4 for 4/4 time
-} SpotifyAudioFeatures;
-
-// ===== RECOMMENDATIONS STRUCTURES =====
-
-typedef struct {
-    SpotifyTrack *tracks;
-    int count;
-} SpotifyRecommendations;
-
-// ===== RECENTLY PLAYED STRUCTURES =====
-
-typedef struct {
-    SpotifyTrack track;
-    char played_at[32];  // ISO 8601 timestamp
-    char context_type[32];  // "playlist", "album", "artist", etc.
-} SpotifyPlayHistory;
-
-typedef struct {
-    SpotifyPlayHistory *history;
-    int count;
-} SpotifyRecentlyPlayed;
 
 // ===== ALBUM FUNCTIONS =====
 

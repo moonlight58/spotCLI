@@ -1,3 +1,6 @@
+#include "spotify/spotify_api.h"
+#include "spotify/spotify_advanced.h"
+
 void spotify_free_album_list(SpotifyAlbumList *list) {
     if (!list) return;
     free(list->albums);

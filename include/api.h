@@ -61,6 +61,15 @@ typedef struct { // List of all the playlists
     int total;
 } SpotifyPlaylistList;
 
+// ===== ALBUM INFO STRUCTURES =====
+typedef struct {
+    char id[64];
+    char name[256];
+    char artist[256];
+    char release_date[16];  // YYYY-MM-DD
+    int total_tracks;
+} SpotifyAlbumInfo;
+
 // Full playlist with tracks and details
 typedef struct {
     char id[64];
