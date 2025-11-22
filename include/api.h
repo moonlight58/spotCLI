@@ -132,6 +132,57 @@ typedef struct {
     int queue_count;
 } SpotifyQueue;
 
+// Album Detailed
+typedef struct {
+    SpotifyTrack *tracks;
+    int count;
+    SpotifyAlbumInfo album_info;
+} SpotifyAlbumDetailed;
+
+// User Profile
+typedef struct {
+    char user_id[64];
+    char display_name[256];
+    int followers;
+    int public_playlists;
+    char profile_url[512];
+    char profile_image_url[512];
+} SpotifyUserProfile;
+
+// Audio Features
+typedef struct {
+    char track_id[64];
+    char track_name[256];
+    float acousticness;
+    float danceability;
+    float energy;
+    float instrumentalness;
+    float liveness;
+    float loudness;
+    float speechiness;
+    float valence;
+    int tempo;
+    int time_signature;
+} SpotifyAudioFeatures;
+
+// Recommendations
+typedef struct {
+    SpotifyTrack *tracks;
+    int count;
+} SpotifyRecommendations;
+
+// Recently Played
+typedef struct {
+    SpotifyTrack track;
+    char played_at[32];
+    char context_type[32];
+} SpotifyPlayHistory;
+
+typedef struct {
+    SpotifyPlayHistory *history;
+    int count;
+} SpotifyRecentlyPlayed;
+
 // Search for tracks, artists, artists top tracks
 SpotifyTrackList* spotify_search_tracks(SpotifyToken *token, const char *query, int limit);
 SpotifyArtistList* spotify_search_artists(SpotifyToken *token, const char *query, int limit);
@@ -155,23 +206,44 @@ SpotifyPlaylistResult* spotify_add_tracks_to_playlist(SpotifyToken *token, const
 SpotifyPlaylistResult* spotify_remove_tracks_from_playlist(SpotifyToken *token, const char *playlist_id, const char **track_uris, int count, const char *snapshot_id);
 bool spotify_unfollow_playlist(SpotifyToken *token, const char *playlist_id);
 
+SpotifyAlbumDetailed* spotify_get_album(SpotifyToken *token, const char *album_id);
+SpotifyAlbumList* spotify_search_albums(SpotifyToken *token, const char *query, int limit);
+SpotifyUserProfile* spotify_get_current_user_profile(SpotifyToken *token);
+SpotifyUserProfile* spotify_get_user_profile(SpotifyToken *token, const char *user_id);
+SpotifyAudioFeatures* spotify_get_audio_features(SpotifyToken *token, const char *track_id);
+SpotifyAudioFeatures* spotify_get_audio_features_batch(SpotifyToken *token, const char **track_ids, int count);
+SpotifyRecommendations* spotify_get_recommendations(SpotifyToken *token, const char **seed_tracks, const char **seed_artists, const char **seed_genres, int seed_count, int limit);
+SpotifyRecentlyPlayed* spotify_get_recently_played(SpotifyToken *token, int limit);
+
+
 // Free track list, artist list, album list, player state, user's playlist memory
-void spotify_free_track_list(SpotifyTrackList *list);
-void spotify_free_artist_list(SpotifyArtistList *list);
+void spotify_free_album_detailed(SpotifyAlbumDetailed *album);
 void spotify_free_album_list(SpotifyAlbumList *list);
+void spotify_free_artist_list(SpotifyArtistList *list);
+void spotify_free_audio_features(SpotifyAudioFeatures *features);
+void spotify_free_audio_features_batch(SpotifyAudioFeatures *features, int count);
 void spotify_free_player_state(SpotifyPlayerState *state);
-void spotify_free_playlist_list(SpotifyPlaylistList *list);
 void spotify_free_playlist_full(SpotifyPlaylistFull *playlist);
+void spotify_free_playlist_list(SpotifyPlaylistList *list);
 void spotify_free_playlist_result(SpotifyPlaylistResult *result);
+void spotify_free_recently_played(SpotifyRecentlyPlayed *history);
+void spotify_free_recommendations(SpotifyRecommendations *recommendations);
+void spotify_free_track_list(SpotifyTrackList *list);
+void spotify_free_user_profile(SpotifyUserProfile *profile);
 
 // Helper to print track, artist, album, user's playlist, player state info
-void spotify_print_track(SpotifyTrack *track, int index);
-void spotify_print_artist(SpotifyArtist *artist, int index);
 void spotify_print_album(SpotifyAlbum *album, int index);
+void spotify_print_album_detailed(SpotifyAlbumDetailed *album);
+void spotify_print_artist(SpotifyArtist *artist, int index);
+void spotify_print_audio_features(SpotifyAudioFeatures *features);
+void spotify_print_device(SpotifyDevice *device, int index);
+void spotify_print_player_state(SpotifyPlayerState *state);
 void spotify_print_playlist(SpotifyPlaylist *playlist, int index);
 void spotify_print_playlist_full(SpotifyPlaylistFull *playlist);
-void spotify_print_player_state(SpotifyPlayerState *state);
-void spotify_print_device(SpotifyDevice *device, int index);
+void spotify_print_recently_played(SpotifyRecentlyPlayed *history);
+void spotify_print_recommendations(SpotifyRecommendations *recommendations);
+void spotify_print_track(SpotifyTrack *track, int index);
+void spotify_print_user_profile(SpotifyUserProfile *profile);
 
 // Control playback (pause/resume/start/toggle)
 bool spotify_pause_playback(SpotifyToken *token, const char *device_id);
