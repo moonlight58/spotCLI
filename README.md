@@ -295,19 +295,6 @@ The app requests the following Spotify scopes:
 
 ---
 
-#### Key Features in These Layouts
-
-✓ **Multi-select with checkboxes** for batch operations  
-✓ **Sidebar navigation** for quick menu access  
-✓ **Real-time playback info** displayed prominently  
-✓ **Keyboard shortcuts** shown at bottom  
-✓ **Split views** for simultaneous library + search  
-✓ **Modal dialogs** for confirmations and selections  
-✓ **Visual hierarchy** with boxes and spacing  
-✓ **Scroll indicators** (↓ more items, ↑↓ navigation)  
-
----
-
 **ncurses would be ideal** for rendering these with keyboard navigation and mouse support!
 
 ---
