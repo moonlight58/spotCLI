@@ -17,7 +17,8 @@ enum {
     COLOR_PAIR_SELECTED,
     COLOR_PAIR_PLAYING,
     COLOR_PAIR_BORDER,
-    COLOR_PAIR_ACCENT
+    COLOR_PAIR_ACCENT,
+    COLOR_PAIR_HELP
 };
 
 // UI State
@@ -81,5 +82,8 @@ void ui_view_playlists(UIState *ui, SpotifyToken *token);
 void ui_view_queue(UIState *ui, SpotifyToken *token);
 void ui_view_player_state(UIState *ui, SpotifyToken *token);
 void ui_view_devices(UIState *ui, SpotifyToken *token);
+
+void ui_show_help_popup(void);           // Simple quick help
+void ui_show_scrollable_help(void);       // Full scrollable help
 
 #endif // NCURSES_UI_H

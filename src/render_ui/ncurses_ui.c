@@ -14,11 +14,60 @@ static const char *menu_items[] = {
     "Quit"
 };
 
-static const char *help_items[][] = {
-    {"?", "Open help menu popup"},
+// Help content structure
+typedef struct {
+    const char *key;
+    const char *description;
+} HelpItem;
+
+// Define help content for different sections
+static const HelpItem general_help[] = {
+    {"↑ / k", "Move selection up"},
+    {"↓ / j", "Move selection down"},
+    {"Enter", "Select item / Confirm action"},
     {"q", "Quit application"},
-    {"b", "Come back to the previous state"}
-}
+    {"b", "Go back to previous screen"},
+    {"? / h", "Show/hide this help menu"},
+    {"Esc", "Close popup or cancel action"},
+};
+
+static const HelpItem track_list_help[] = {
+    {"Enter", "Save track to your library"},
+    {"Space", "Preview/Play track"},
+    {"p", "Add track to playlist"},
+    {"i", "Show track information"},
+    {"a", "Add to queue"},
+};
+
+static const HelpItem artist_help[] = {
+    {"Enter", "View artist details"},
+    {"t", "View artist's top tracks"},
+    {"a", "View artist's albums"},
+    {"f", "Follow/Unfollow artist"},
+};
+
+static const HelpItem playlist_help[] = {
+    {"Enter", "Open playlist"},
+    {"e", "Edit playlist details"},
+    {"d", "Delete/Unfollow playlist"},
+    {"n", "Create new playlist"},
+    {"a", "Add tracks to playlist"},
+};
+
+static const HelpItem player_help[] = {
+    {"Space", "Play/Pause"},
+    {"n", "Skip to next track"},
+    {"p", "Skip to previous track"},
+    {"s", "Toggle shuffle"},
+    {"r", "Cycle repeat mode"},
+    {"+/-", "Increase/Decrease volume"},
+};
+
+#define GENERAL_HELP_COUNT (sizeof(general_help) / sizeof(HelpItem))
+#define TRACK_LIST_HELP_COUNT (sizeof(track_list_help) / sizeof(HelpItem))
+#define ARTIST_HELP_COUNT (sizeof(artist_help) / sizeof(HelpItem))
+#define PLAYLIST_HELP_COUNT (sizeof(playlist_help) / sizeof(HelpItem))
+#define PLAYER_HELP_COUNT (sizeof(player_help) / sizeof(HelpItem))
 
 // Initialize ncurses and create windows
 UIState* ui_init(void) {
@@ -158,22 +207,278 @@ void ui_draw_box_with_title(WINDOW *win, const char *title) {
     }
 }
 
-void ui_draw_help_box(WINDOW *win, const char *title) {
-    werase(win);
-    ui_draw_box_with_title(win, "HELP");
+static WINDOW* create_popup_window(int height, int width) {
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+    
+    int start_y = (max_y - height) / 2;
+    int start_x = (max_x - width) / 2;
+    
+    // Ensure popup fits on screen
+    if (start_y < 0) start_y = 0;
+    if (start_x < 0) start_x = 0;
+    if (height > max_y) height = max_y;
+    if (width > max_x) width = max_x;
+    
+    return newwin(height, width, start_y, start_x);
+}
 
-    int max_x, max_y;
-    getmaxyx(win, max_y, max_x);
-
-    int visible_items = maxy - 20;
-
-    for (int i = 0; i < HELP_COUNT && i < visible_items; i++) {
-        wattron(win, COLOR_PAIR(COLOR_PAIR_DEFAULT));
-        mvwprintw(win, i + 2, 1, "%s", help_items[i][0]);
-        mvwprintw(win, i + 2, 2, "%s", help_items[i][1]);
-        wattroff(win, COLOR_PAIR(COLOR_PAIR_DEFAULT));
+static int draw_help_section(WINDOW *win, int start_line, int max_line, 
+                             const char *title, const HelpItem *items, 
+                             size_t count, int scroll_offset) {
+    int line = start_line;
+    int screen_line = 2;
+    
+    // Section title
+    if (line >= scroll_offset && screen_line < max_line) {
+        wattron(win, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD | A_UNDERLINE);
+        mvwprintw(win, screen_line, 2, "%s", title);
+        wattroff(win, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD | A_UNDERLINE);
+        screen_line++;
     }
-    wrefresh(win);
+    line++;
+    
+    // Empty line after title
+    if (line >= scroll_offset && screen_line < max_line) {
+        screen_line++;
+    }
+    line++;
+    
+    // Help items
+    for (size_t i = 0; i < count; i++) {
+        if (line >= scroll_offset && screen_line < max_line) {
+            // Key binding (green/cyan)
+            wattron(win, COLOR_PAIR(COLOR_PAIR_PLAYING) | A_BOLD);
+            mvwprintw(win, screen_line, 4, "%-12s", items[i].key);
+            wattroff(win, COLOR_PAIR(COLOR_PAIR_PLAYING) | A_BOLD);
+            
+            // Description
+            wattron(win, COLOR_PAIR(COLOR_PAIR_DEFAULT));
+            mvwprintw(win, screen_line, 17, "%s", items[i].description);
+            wattroff(win, COLOR_PAIR(COLOR_PAIR_DEFAULT));
+            
+            screen_line++;
+        }
+        line++;
+    }
+    
+    // Empty line after section
+    if (line >= scroll_offset && screen_line < max_line) {
+        screen_line++;
+    }
+    line++;
+    
+    return line;
+}
+
+// Show scrollable help popup
+void ui_show_scrollable_help(void) {
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+    
+    // Calculate popup size
+    int popup_height = (max_y > 32) ? 32 : max_y - 4;
+    int popup_width = (max_x > 75) ? 75 : max_x - 4;
+    
+    if (popup_height < 10 || popup_width < 40) {
+        // Screen too small for popup
+        return;
+    }
+    
+    WINDOW *popup = create_popup_window(popup_height, popup_width);
+    if (!popup) return;
+    
+    // Calculate total content lines
+    int total_lines = 0;
+    total_lines += 3; // General + spacing
+    total_lines += GENERAL_HELP_COUNT + 2;
+    total_lines += 3; // Track List + spacing
+    total_lines += TRACK_LIST_HELP_COUNT + 2;
+    total_lines += 3; // Artist + spacing
+    total_lines += ARTIST_HELP_COUNT + 2;
+    total_lines += 3; // Playlist + spacing
+    total_lines += PLAYLIST_HELP_COUNT + 2;
+    total_lines += 3; // Player + spacing
+    total_lines += PLAYER_HELP_COUNT + 2;
+    
+    int visible_lines = popup_height - 4; // Minus borders and footer
+    int max_scroll = (total_lines > visible_lines) ? (total_lines - visible_lines) : 0;
+    int scroll_offset = 0;
+    
+    bool done = false;
+    
+    // Enable keypad for arrow keys
+    keypad(popup, TRUE);
+    
+    while (!done) {
+        werase(popup);
+        
+        // Draw border
+        wattron(popup, COLOR_PAIR(COLOR_PAIR_BORDER) | A_BOLD);
+        box(popup, 0, 0);
+        wattroff(popup, COLOR_PAIR(COLOR_PAIR_BORDER) | A_BOLD);
+        
+        // Title with icon
+        wattron(popup, COLOR_PAIR(COLOR_PAIR_HEADER) | A_BOLD);
+        int title_x = (popup_width - 20) / 2;
+        mvwprintw(popup, 0, title_x, " 📖 KEYBOARD SHORTCUTS ");
+        wattroff(popup, COLOR_PAIR(COLOR_PAIR_HEADER) | A_BOLD);
+        
+        // Draw content sections
+        int line = 0;
+        line = draw_help_section(popup, line, popup_height - 2, 
+                                 "GENERAL CONTROLS", general_help, 
+                                 GENERAL_HELP_COUNT, scroll_offset);
+        
+        line = draw_help_section(popup, line, popup_height - 2, 
+                                 "TRACK LIST", track_list_help, 
+                                 TRACK_LIST_HELP_COUNT, scroll_offset);
+        
+        line = draw_help_section(popup, line, popup_height - 2, 
+                                 "ARTIST VIEW", artist_help, 
+                                 ARTIST_HELP_COUNT, scroll_offset);
+        
+        line = draw_help_section(popup, line, popup_height - 2, 
+                                 "PLAYLIST VIEW", playlist_help, 
+                                 PLAYLIST_HELP_COUNT, scroll_offset);
+        
+        line = draw_help_section(popup, line, popup_height - 2, 
+                                 "PLAYER CONTROLS", player_help, 
+                                 PLAYER_HELP_COUNT, scroll_offset);
+        
+        // Scroll indicators
+        if (max_scroll > 0) {
+            if (scroll_offset > 0) {
+                wattron(popup, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
+                mvwprintw(popup, 1, popup_width - 5, " ▲ ");
+                wattroff(popup, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
+            }
+            if (scroll_offset < max_scroll) {
+                wattron(popup, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
+                mvwprintw(popup, popup_height - 2, popup_width - 5, " ▼ ");
+                wattroff(popup, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
+            }
+            
+            // Scroll position indicator
+            if (max_scroll > 0) {
+                int scroll_pos = (scroll_offset * 100) / max_scroll;
+                mvwprintw(popup, popup_height - 1, popup_width - 10, "%3d%%", scroll_pos);
+            }
+        }
+        
+        // Footer with instructions
+        wattron(popup, COLOR_PAIR(COLOR_PAIR_FOOTER));
+        const char *footer = "↑↓/j/k: Scroll | q/?/Esc: Close";
+        mvwprintw(popup, popup_height - 1, (popup_width - strlen(footer)) / 2, "%s", footer);
+        wattroff(popup, COLOR_PAIR(COLOR_PAIR_FOOTER));
+        
+        wrefresh(popup);
+        
+        // Handle input
+        int ch = wgetch(popup);
+        switch (ch) {
+            case KEY_UP:
+            case 'k':
+                if (scroll_offset > 0) scroll_offset--;
+                break;
+                
+            case KEY_DOWN:
+            case 'j':
+                if (scroll_offset < max_scroll) scroll_offset++;
+                break;
+                
+            case KEY_PPAGE: // Page Up
+                scroll_offset -= 5;
+                if (scroll_offset < 0) scroll_offset = 0;
+                break;
+                
+            case KEY_NPAGE: // Page Down
+                scroll_offset += 5;
+                if (scroll_offset > max_scroll) scroll_offset = max_scroll;
+                break;
+                
+            case KEY_HOME:
+                scroll_offset = 0;
+                break;
+                
+            case KEY_END:
+                scroll_offset = max_scroll;
+                break;
+                
+            case 'q':
+            case 'Q':
+            case 27: // ESC
+            case '?':
+            case 'h':
+            case 'H':
+                done = true;
+                break;
+        }
+    }
+    
+    // Cleanup
+    delwin(popup);
+    
+    // Force complete redraw of all windows
+    touchwin(stdscr);
+    refresh();
+}
+
+// Simple non-scrolling help popup (for quick reference)
+void ui_show_help_popup(void) {
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+    
+    int popup_height = 20;
+    int popup_width = 60;
+    
+    WINDOW *popup = create_popup_window(popup_height, popup_width);
+    if (!popup) return;
+    
+    werase(popup);
+    
+    // Border
+    wattron(popup, COLOR_PAIR(COLOR_PAIR_BORDER) | A_BOLD);
+    box(popup, 0, 0);
+    wattroff(popup, COLOR_PAIR(COLOR_PAIR_BORDER) | A_BOLD);
+    
+    // Title
+    wattron(popup, COLOR_PAIR(COLOR_PAIR_HEADER) | A_BOLD);
+    mvwprintw(popup, 0, (popup_width - 15) / 2, " 📖 QUICK HELP ");
+    wattroff(popup, COLOR_PAIR(COLOR_PAIR_HEADER) | A_BOLD);
+    
+    int line = 2;
+    
+    // Just show general help
+    wattron(popup, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
+    mvwprintw(popup, line++, 2, "GENERAL CONTROLS:");
+    wattroff(popup, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
+    line++;
+    
+    for (size_t i = 0; i < GENERAL_HELP_COUNT && line < popup_height - 3; i++) {
+        wattron(popup, COLOR_PAIR(COLOR_PAIR_PLAYING) | A_BOLD);
+        mvwprintw(popup, line, 4, "%-12s", general_help[i].key);
+        wattroff(popup, COLOR_PAIR(COLOR_PAIR_PLAYING) | A_BOLD);
+        
+        mvwprintw(popup, line, 17, "%s", general_help[i].description);
+        line++;
+    }
+    
+    // Footer
+    wattron(popup, COLOR_PAIR(COLOR_PAIR_FOOTER));
+    mvwprintw(popup, popup_height - 1, (popup_width - 25) / 2, "Press any key to close");
+    wattroff(popup, COLOR_PAIR(COLOR_PAIR_FOOTER));
+    
+    wrefresh(popup);
+    
+    // Wait for key press
+    nodelay(popup, FALSE);
+    wgetch(popup);
+    
+    // Cleanup
+    delwin(popup);
+    touchwin(stdscr);
+    refresh();
 }
 
 // Draw progress bar
@@ -444,6 +749,16 @@ void ui_handle_input(UIState *ui, SpotifyToken *token) {
                         break;
                 }
                 break;
+            
+            case '?':  // NEW: Help key
+            case 'h':  // Also allow 'h' for help
+                ui_show_scrollable_help();
+                // Redraw all windows after popup closes
+                ui_draw_header(ui->header, "Spotify TUI");
+                ui_draw_sidebar(ui->sidebar, ui->selected_item);
+                ui_draw_footer(ui->footer, NULL);
+                break;
+                
             case 'q':
             case 'Q':
                 ui->running = false;
