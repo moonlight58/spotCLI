@@ -284,11 +284,11 @@ The app requests the following Spotify scopes:
   - [x] Change playback device
 - [x] Create custom playlists
 - [x] Remove tracks from library
-- [ ] Album search & detailed album info (tracks in album)
-- [ ] User profile info (followers, public playlists)
-- [ ] Recommendations songs (get recommendations based on seeds)
-- [ ] Audio features (tempo, energy, danceability of tracks)
-- [ ] Recently played (get user's listening history)
+- [x] Album search & detailed album info (tracks in album)
+- [x] User profile info (followers, public playlists)
+- [x] Recommendations songs (get recommendations based on seeds)
+- [x] Audio features (tempo, energy, danceability of tracks)
+- [x] Recently played (get user's listening history)
 - [ ] Batch operations
 - [ ] Configuration file for preferences
 - [ ] Shell completions (bash/zsh/fish)
