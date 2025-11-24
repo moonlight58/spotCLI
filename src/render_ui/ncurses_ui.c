@@ -14,6 +14,12 @@ static const char *menu_items[] = {
     "Quit"
 };
 
+static const char *help_items[][] = {
+    {"?", "Open help menu popup"},
+    {"q", "Quit application"},
+    {"b", "Come back to the previous state"}
+}
+
 // Initialize ncurses and create windows
 UIState* ui_init(void) {
     UIState *ui = malloc(sizeof(UIState));
@@ -42,6 +48,7 @@ UIState* ui_init(void) {
         init_pair(COLOR_PAIR_PLAYING, COLOR_GREEN, COLOR_BLACK);
         init_pair(COLOR_PAIR_BORDER, COLOR_GREEN, COLOR_BLACK);
         init_pair(COLOR_PAIR_ACCENT, COLOR_CYAN, COLOR_BLACK);
+        init_pair(COLOR_PAIR_HELP, COLOR_YELLOW, COLOR_BLACK);
     }
 
     int max_y, max_x;
@@ -143,12 +150,30 @@ void ui_draw_box_with_title(WINDOW *win, const char *title) {
     wattron(win, COLOR_PAIR(COLOR_PAIR_BORDER));
     box(win, 0, 0);
     wattroff(win, COLOR_PAIR(COLOR_PAIR_BORDER));
-
+    werase(win);
     if (title) {
         wattron(win, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
         mvwprintw(win, 0, 2, " %s ", title);
         wattroff(win, COLOR_PAIR(COLOR_PAIR_ACCENT) | A_BOLD);
     }
+}
+
+void ui_draw_help_box(WINDOW *win, const char *title) {
+    werase(win);
+    ui_draw_box_with_title(win, "HELP");
+
+    int max_x, max_y;
+    getmaxyx(win, max_y, max_x);
+
+    int visible_items = maxy - 20;
+
+    for (int i = 0; i < HELP_COUNT && i < visible_items; i++) {
+        wattron(win, COLOR_PAIR(COLOR_PAIR_DEFAULT));
+        mvwprintw(win, i + 2, 1, "%s", help_items[i][0]);
+        mvwprintw(win, i + 2, 2, "%s", help_items[i][1]);
+        wattroff(win, COLOR_PAIR(COLOR_PAIR_DEFAULT));
+    }
+    wrefresh(win);
 }
 
 // Draw progress bar
@@ -419,7 +444,6 @@ void ui_handle_input(UIState *ui, SpotifyToken *token) {
                         break;
                 }
                 break;
-
             case 'q':
             case 'Q':
                 ui->running = false;
