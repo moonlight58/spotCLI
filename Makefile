@@ -1,7 +1,7 @@
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall -Wextra -O2 -Isrc -Iinclude
-LDFLAGS = -lcurl -ljson-c -lncurses
+LDFLAGS = -lcurl -ljson-c -lncursesw
 
 # Directories
 SRC_DIR = src

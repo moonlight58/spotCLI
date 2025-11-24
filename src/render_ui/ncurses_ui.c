@@ -1,6 +1,7 @@
 #include "render_ui/ncurses_ui.h"
 #include <string.h>
 #include <stdlib.h>
+#include <locale.h>
 
 static const char *menu_items[] = {
     "Search Tracks",
@@ -73,6 +74,9 @@ static const HelpItem player_help[] = {
 UIState* ui_init(void) {
     UIState *ui = malloc(sizeof(UIState));
     if (!ui) return NULL;
+
+    // CRITICAL: Set locale before initializing ncurses for UTF-8 support
+    setlocale(LC_ALL, "");
 
     // Initialize ncurses
     initscr();
