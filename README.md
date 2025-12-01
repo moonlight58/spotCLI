@@ -274,7 +274,7 @@ The app requests the following Spotify scopes:
   - [ ] Remove User's Saved Albums
   - [ ] Check User's Saved Albums
   - [ ] Get New Releases
-- [ ] Artists (spotify_artist.c/h)
+- [ ] Artists
   - [ ] Get Artist
   - [ ] Get Several Artists
   - [x] Get Artist's Albums
@@ -299,30 +299,30 @@ The app requests the following Spotify scopes:
   - [x] Get the User's Queue
   - [x] Add Item to Playback Queue
 - [ ] Playlists
-  - [ ] Get Playlist
+  - [x] Get Playlist
   - [ ] Change Playlist Details
   - [ ] Get Playlist Items
   - [ ] Update Playlist Items
-  - [ ] Add Items to Playlist
-  - [ ] Remove Playlist Items
+  - [x] Add Items to Playlist
+  - [x] Remove Playlist Items
   - [ ] Get Current User's Playlists
   - [ ] Get User's Playlists
-  - [ ] Create Playlist
+  - [x] Create Playlist
 - [ ] Search
-  - [ ] Search for Item
+  - [x] Search for Item
 - [ ] Tracks
   - [ ] Get Track
   - [ ] Get Several Tracks
-  - [ ] Get User's Saved Tracks
-  - [ ] Save Tracks for Current User
+  - [x] Get User's Saved Tracks
+  - [x] Save Tracks for Current User
   - [ ] Remove User's Saved Tracks
   - [ ] Check User's Saved Tracks
 - [ ] User
-  - [ ] Get Current User's Profile
+  - [x] Get Current User's Profile
   - [ ] Get User's Top Items
-  - [ ] Get User's Profile
+  - [x] Get User's Profile
   - [ ] Follow Playlist
-  - [ ] Unfollow Playlist
+  - [x] Unfollow Playlist
   - [ ] Get Followed Artists
   - [ ] Follow Artists or Users
   - [ ] Check if User Follow Artists or Users

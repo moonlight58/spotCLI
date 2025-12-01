@@ -1,4 +1,4 @@
-#include "spotify.internal.h"
+#include "spotify/search.h"
 
 SpotifyAlbumList* spotify_get_artist_albums(SpotifyToken *token, const char *artist_id) {
     char url[256];

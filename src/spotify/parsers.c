@@ -49,6 +49,40 @@ void parse_track_json(struct json_object *item, SpotifyTrack *track) {
     }
 }
 
+void parse_album_json(struct json_object *item, SpotifyAlbum *album) {
+    struct json_object *obj;
+
+    memset(album, 0, sizeof(SpotifyAlbum));
+
+    // ID
+    if(json_object_object_get_ex(item, "id", &obj)) {
+        strncpy(album->id, json_object_get_string(obj), sizeof(album->id) - 1);
+    }
+
+    // NAME
+    if (json_object_object_get_ex(item, "name", &obj)) {
+        strncpy(album->name, json_object_get_string(obj), sizeof(album->name) - 1);
+    }
+
+    // ARTIST
+    struct json_object *artists;
+    if (json_object_object_get_ex(item, "artists", &artists) && json_object_array_length(artists) > 0) {
+        struct json_object *artist = json_object_array_get_idx(artists, 0);
+        if (json_object_object_get_ex(artist, "name", &obj)) {
+            strncpy(album->artist, json_object_get_string(obj), sizeof(album->artist) - 1);
+        }
+    }
+
+    // TRACKS
+    struct json_object *tracks;
+    if (json_object_object_get_ex(root, "tracks", &tracks)) {
+        // get total count
+        if (json_object_object_get_ex(tracks, "total", &obj)) {
+            album
+        }
+    }
+}
+
 /**
  * Parse artist data from JSON object into SpotifyArtist struct
  */

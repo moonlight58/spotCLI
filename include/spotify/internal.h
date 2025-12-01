@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // PUBLIC INTERFACE (WHAT USERS CAN SEE)
 

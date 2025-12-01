@@ -2,7 +2,6 @@
 #define SPOTIFY_ADVANCED_H
 
 #include "spotify/spotify_internal.h"
-#include <stdbool.h>
 
 
 // ===== ALBUM FUNCTIONS =====
