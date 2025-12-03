@@ -235,6 +235,7 @@ void spotify_free_player_state(SpotifyPlayerState *state);
 void spotify_free_playlist_full(SpotifyPlaylistFull *playlist);
 void spotify_free_playlist_list(SpotifyPlaylistList *list);
 void spotify_free_playlist_result(SpotifyPlaylistResult *result);
+void spotify_free_queue(SpotifyQueue *queue);
 void spotify_free_recently_played(SpotifyRecentlyPlayed *history);
 void spotify_free_recommendations(SpotifyRecommendations *recommendations);
 void spotify_free_track_list(SpotifyTrackList *list);
@@ -249,6 +250,7 @@ void spotify_print_device(SpotifyDevice *device, int index);
 void spotify_print_player_state(SpotifyPlayerState *state);
 void spotify_print_playlist(SpotifyPlaylist *playlist, int index);
 void spotify_print_playlist_full(SpotifyPlaylistFull *playlist);
+void spotify_print_queue(SpotifyQueue *queue);
 void spotify_print_recently_played(SpotifyRecentlyPlayed *history);
 void spotify_print_recommendations(SpotifyRecommendations *recommendations);
 void spotify_print_track(SpotifyTrack *track, int index);
@@ -303,19 +305,4 @@ SpotifyQueue* spotify_get_queue(SpotifyToken *token);
  * @return true if successful, false otherwise
  */
 bool spotify_add_to_queue(SpotifyToken *token, const char *uri, const char *device_id);
-
-/**
- * Free queue memory
- * 
- * @param queue - Queue to free
- */
-void spotify_free_queue(SpotifyQueue *queue);
-
-/**
- * Print queue information
- * 
- * @param queue - Queue to print
- */
-void spotify_print_queue(SpotifyQueue *queue);
-
 #endif

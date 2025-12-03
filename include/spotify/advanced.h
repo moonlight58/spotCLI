@@ -101,6 +101,30 @@ SpotifyRecentlyPlayed* spotify_get_recently_played(SpotifyToken *token, int limi
  */
 SpotifyAlbumList* spotify_get_user_saved_albums(SpotifyToken *token, int limit, int offset);
 
+/**
+ * Remove albums from current user's 'Your Music' library
+ * 
+ * @param token - Valid Spotify token
+ * @param album_ids - Array of Spotify album IDs to remove
+ * @param count - Number of album IDs (max 50)
+ * @return true if successful, false otherwise
+ */
+bool spotify_remove_albums(SpotifyToken *token, const char **album_ids, int count);
+
+/**
+ * Check if one or more albums are saved in current user's 'Your Music' library
+ * 
+ * @param token - Valid Spotify token
+ * @param album_ids - Array of Spotify album IDs to check
+ * @param count - Number of album IDs (max 50)
+ * @param result_count - Output parameter for number of results returned
+ * @return Array of booleans (true = saved, false = not saved), or NULL on error
+ *         Caller must free the returned array
+ */
+bool* spotify_check_saved_albums(SpotifyToken *token, const char **album_ids, int count, int *result_count);
+
+
+
 // ===== FREE FUNCTIONS =====
 
 void spotify_free_album_detailed(SpotifyAlbumDetailed *album);

@@ -167,3 +167,150 @@ bool spotify_save_albums(SpotifyToken *token, const chat **album_ids, int count)
     json_object_put(root);
     return result;
 }
+
+bool spotify_remove_albums(SpotifyToken *token, const char **album_ids, int count) {
+    if (!token || !album_ids || count <= 0) {
+        fprintf(stderr, "Invalid parameters for remove_albums\n");
+        return false;
+    }
+
+    if (count > 50) {
+        fprintf(stderr, "Cannot remove more than 50 albums at once\n");
+        return false;
+    }
+
+    const char *url = "https://api.spotify.com/v1/me/albums";
+
+    // Build JSON body
+    struct json_object *root = json_object_new_object();
+    struct json_object *ids_array = json_object_new_array();
+
+    for (int i = 0; i < count; i++) {
+        json_object_array_add(ids_array, json_object_new_string(album_ids[i]));
+    }
+
+    json_object_object_add(root, "ids", ids_array);
+    const char *json_str = json_object_to_json_string(root);
+
+    // Spotify's DELETE /v1/me/albums returns 200 OK (not 204)
+    // So we need a custom implementation for this endpoint
+    CURL *curl = curl_easy_init();
+    if (!curl) {
+        json_object_put(root);
+        return false;
+    }
+
+    char auth_header[1024];
+    snprintf(auth_header, sizeof(auth_header), "Authorization: Bearer %s", token->access_token);
+
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, auth_header);
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_str);
+
+    CURLcode res = curl_easy_perform(curl);
+
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    json_object_put(root);
+
+    if (res != CURLE_OK) {
+        fprintf(stderr, "CURL error: %s\n", curl_easy_strerror(res));
+        return false;
+    }
+
+    // Spotify returns 200 OK for this endpoint
+    if (response_code != 200) {
+        fprintf(stderr, "HTTP error: %ld\n", response_code);
+        return false;
+    }
+
+    return true;
+}
+
+bool* spotify_check_saved_albums(SpotifyToken *token, const char **album_ids, int count, int *result_count) {
+    if (!token || !album_ids || count <= 0 || !result_count) {
+        fprintf(stderr, "Invalid parameters for check_saved_albums\n");
+        return NULL;
+    }
+
+    if (count > 50) {
+        fprintf(stderr, "Cannot check more than 50 albums at once\n");
+        return NULL;
+    }
+
+    // Build URL with query parameters
+    char url[2048] = "https://api.spotify.com/v1/me/albums/contains?ids=";
+    
+    for (int i = 0; i < count; i++) {
+        if (i > 0) strcat(url, ",");
+        strcat(url, album_ids[i]);
+    }
+
+    struct json_object *root = spotify_api_get(token, url);
+    if (!root) {
+        fprintf(stderr, "Failed to check saved albums\n");
+        return NULL;
+    }
+
+    // Response is a JSON array of booleans
+    if (json_object_get_type(root) != json_type_array) {
+        fprintf(stderr, "Unexpected response format\n");
+        json_object_put(root);
+        return NULL;
+    }
+
+    int response_count = json_object_array_length(root);
+    if (response_count != count) {
+        fprintf(stderr, "Response count mismatch: expected %d, got %d\n", count, response_count);
+        json_object_put(root);
+        return NULL;
+    }
+
+    // Allocate result array
+    bool *results = malloc(sizeof(bool) * count);
+    if (!results) {
+        fprintf(stderr, "Failed to allocate memory for results\n");
+        json_object_put(root);
+        return NULL;
+    }
+
+    // Parse boolean array
+    for (int i = 0; i < count; i++) {
+        struct json_object *item = json_object_array_get_idx(root, i);
+        results[i] = json_object_get_boolean(item);
+    }
+
+    *result_count = count;
+    json_object_put(root);
+    return results;
+}
+
+/**
+ * Check if a single album is saved - convenience wrapper
+ */
+bool spotify_is_album_saved(SpotifyToken *token, const char *album_id) {
+    if (!token || !album_id) {
+        return false;
+    }
+
+    const char *ids[] = { album_id };
+    int result_count = 0;
+    
+    bool *results = spotify_check_saved_albums(token, ids, 1, &result_count);
+    if (!results) {
+        return false;
+    }
+
+    bool is_saved = results[0];
+    free(results);
+    
+    return is_saved;
+}

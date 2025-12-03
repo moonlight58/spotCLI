@@ -270,8 +270,8 @@ The app requests the following Spotify scopes:
   - [ ] Get Several Albums
   - [ ] Get Album Tracks
   - [x] Get User's Saved Albums
-  - [ ] Save Albums for Current User
-  - [ ] Remove User's Saved Albums
+  - [x] Save Albums for Current User
+  - [x] Remove User's Saved Albums
   - [ ] Check User's Saved Albums
   - [ ] Get New Releases
 - [ ] Artists
