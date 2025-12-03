@@ -29,12 +29,13 @@ char* url_encode(const char *str);
 /**
  * Parse track, artist, playlist, device, player state data from JSON object into SpotifyTrack struct
  */
-void parse_track_json(struct json_object *item, SpotifyTrack *track);
+void parse_album_json(struct json_object *item, SpotifyAlbum *album);
 void parse_artist_json(struct json_object *item, SpotifyArtist *artist);
-void parse_playlist_json(struct json_object *item, SpotifyPlaylist *playlist);
-void parse_playlist_full_json(struct json_object *root, SpotifyPlaylistFull *playlist);
 void parse_device_json(struct json_object *device_obj, SpotifyDevice *device);
 void parse_player_state_json(struct json_object *root, SpotifyPlayerState *state);
+void parse_playlist_full_json(struct json_object *root, SpotifyPlaylistFull *playlist);
+void parse_playlist_json(struct json_object *item, SpotifyPlaylist *playlist);
 void parse_queue_json(struct json_object *root, SpotifyQueue *queue);
+void parse_track_json(struct json_object *item, SpotifyTrack *track);
 
 #endif // SPOTIFY_INTERNAL_H

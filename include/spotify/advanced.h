@@ -91,6 +91,16 @@ SpotifyRecommendations* spotify_get_recommendations(SpotifyToken *token, const c
  */
 SpotifyRecentlyPlayed* spotify_get_recently_played(SpotifyToken *token, int limit);
 
+/**
+ * Get user's saved albums
+ * 
+ * @param token - Valid Spotify token
+ * @param limit - Number of albums to return (1-50, default 20)
+ * @param offset - Index of first album to return (default 0)
+ * @return SpotifyAlbumList or NULL on error
+ */
+SpotifyAlbumList* spotify_get_user_saved_albums(SpotifyToken *token, int limit, int offset);
+
 // ===== FREE FUNCTIONS =====
 
 void spotify_free_album_detailed(SpotifyAlbumDetailed *album);

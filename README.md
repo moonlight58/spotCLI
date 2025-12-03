@@ -269,7 +269,7 @@ The app requests the following Spotify scopes:
   - [x] Get Albums
   - [ ] Get Several Albums
   - [ ] Get Album Tracks
-  - [ ] Get User's Saved Albums
+  - [x] Get User's Saved Albums
   - [ ] Save Albums for Current User
   - [ ] Remove User's Saved Albums
   - [ ] Check User's Saved Albums
