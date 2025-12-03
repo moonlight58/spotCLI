@@ -14,6 +14,10 @@ void spotify_free_artist_list(SpotifyArtistList *list) {
     free(list);
 }
 
+void spotify_free_artist(SpotifyArtist *artist) {
+    if (!artist) return;
+    free(artist);
+}
 
 void spotify_free_player_state(SpotifyPlayerState *state) {
     if (!state) return;
@@ -51,6 +55,10 @@ void spotify_free_queue(SpotifyQueue *queue) {
     free(queue);
 }
 
+void spotify_free_track(SpotifyTrack *track) {
+    if (!track) return;
+    free(track);
+}
 
 void spotify_free_track_list(SpotifyTrackList *list) {
     if (!list) return;

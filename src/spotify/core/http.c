@@ -143,6 +143,64 @@ bool spotify_api_put_empty(SpotifyToken *token, const char *url) {
 }
 
 /**
+ * Performs a PUT request to Spotify API and returns JSON response
+ * Returns parsed JSON object or NULL on error
+ */
+struct json_object* spotify_api_put_json(SpotifyToken *token, const char *url,
+                                         const char *json_data) {
+    CURL *curl = curl_easy_init();
+    if (!curl) return NULL;
+
+    MemoryStruct response = {0};
+
+    char auth_header[1024];
+    snprintf(auth_header, sizeof(auth_header), "Authorization: Bearer %s", token->access_token);
+
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, auth_header);
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+    if (json_data && strlen(json_data) > 0) {
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_data);
+    }
+
+    CURLcode res = curl_easy_perform(curl);
+
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK) {
+        fprintf(stderr, "CURL error: %s\n", curl_easy_strerror(res));
+        free(response.data);
+        return NULL;
+    }
+
+    // Check for successful response codes (200, 201)
+    if (response_code != 200 && response_code != 201) {
+        fprintf(stderr, "HTTP error: %ld\n", response_code);
+        if (response.data) {
+            fprintf(stderr, "Response: %s\n", response.data);
+        }
+        free(response.data);
+        return NULL;
+    }
+
+    struct json_object *root = json_tokener_parse(response.data);
+    free(response.data);
+
+    return root;
+}
+
+/**
  * Performs a POST request to Spotify API
  * Returns true if response code is 204 (No Content)
  */

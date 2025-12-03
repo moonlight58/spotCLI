@@ -367,3 +367,58 @@ bool spotify_start_playback(SpotifyToken *token, const char *device_id,
 
     return result;
 }
+
+SpotifyPlayerState* spotify_get_currently_playing(SpotifyToken *token) {
+    if (!token) {
+        fprintf(stderr, "Invalid token parameter\n");
+        return NULL;
+    }
+
+    const char *url = ENDPOINT_CURRENTLY_PLAYING;
+
+    struct json_object *root = spotify_api_get(token, url);
+    if (!root) {
+        fprintf(stderr, "Failed to get currently playing track (no active device or API error)\n");
+        return NULL;
+    }
+
+    // Check if response is empty (no active playback)
+    if (json_object_get_type(root) == json_type_null) {
+        json_object_put(root);
+        fprintf(stderr, "No track currently playing\n");
+        return NULL;
+    }
+
+    SpotifyPlayerState *state = malloc(sizeof(SpotifyPlayerState));
+    if (!state) {
+        json_object_put(root);
+        return NULL;
+    }
+
+    // Parse similar to full player state but with potentially different structure
+    parse_player_state_json(root, state);
+    json_object_put(root);
+
+    return state;
+}
+
+bool spotify_seek_to_position(SpotifyToken *token, int position_ms, const char *device_id) {
+    if (!token || position_ms < 0) {
+        fprintf(stderr, "Invalid parameters for seek_to_position\n");
+        return false;
+    }
+
+    char url[512];
+    
+    if (device_id) {
+        snprintf(url, sizeof(url),
+                "%s?position_ms=%d&device_id=%s",
+                ENDPOINT_PLAYER_SEEK, position_ms, device_id);
+    } else {
+        snprintf(url, sizeof(url),
+                "%s?position_ms=%d",
+                ENDPOINT_PLAYER_SEEK, position_ms);
+    }
+
+    return spotify_api_put_empty(token, url);
+}

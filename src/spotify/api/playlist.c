@@ -254,3 +254,178 @@ bool spotify_unfollow_playlist(SpotifyToken *token, const char *playlist_id) {
     return spotify_api_delete_empty(token, url);
 }
 
+SpotifyPlaylistList* spotify_get_user_playlists(SpotifyToken *token, int limit, int offset) {
+    char url[256];
+    snprintf(url, sizeof(url),
+             "https://api.spotify.com/v1/me/playlists?limit=%d&offset=%d",
+             limit, offset);
+
+    struct json_object *root = spotify_api_get(token, url);
+    if (!root) return NULL;
+
+    struct json_object *items;
+    if (!json_object_object_get_ex(root, "items", &items)) {
+        json_object_put(root);
+        return NULL;
+    }
+
+    int count = json_object_array_length(items);
+    SpotifyPlaylistList *list = malloc(sizeof(SpotifyPlaylistList));
+    list->playlists = malloc(sizeof(SpotifyPlaylist) * count);
+    list->count = count;
+
+    struct json_object *total_obj;
+    if (json_object_object_get_ex(root, "total", &total_obj)) {
+        list->total = json_object_get_int(total_obj);
+    } else {
+        list->total = count;
+    }
+
+    for (int i = 0; i < count; i++) {
+        struct json_object *item = json_object_array_get_idx(items, i);
+        parse_playlist_json(item, &list->playlists[i]);
+    }
+
+    json_object_put(root);
+    return list;
+}
+
+SpotifyTrackList* spotify_get_playlist_tracks(SpotifyToken *token, const char *playlist_id, int limit, int offset) {
+    if (!token || !playlist_id) {
+        fprintf(stderr, "Invalid parameters for get_playlist_tracks\n");
+        return NULL;
+    }
+
+    // Validate and set limits
+    if (limit <= 0) limit = 100;
+    if (limit > 100) limit = 100;
+    if (offset < 0) offset = 0;
+
+    char url[512];
+    snprintf(url, sizeof(url),
+             "%s?limit=%d&offset=%d&fields=items(track(id,name,uri,duration_ms,artists(name),album(name))),total",
+             ENDPOINT_PLAYLIST_TRACKS, limit, offset);
+    
+    // Replace %s with playlist_id
+    char final_url[512];
+    snprintf(final_url, sizeof(final_url), url, playlist_id);
+
+    struct json_object *root = spotify_api_get(token, final_url);
+    if (!root) {
+        fprintf(stderr, "Failed to get playlist tracks\n");
+        return NULL;
+    }
+
+    struct json_object *items;
+    if (!json_object_object_get_ex(root, "items", &items)) {
+        json_object_put(root);
+        return NULL;
+    }
+
+    int count = json_object_array_length(items);
+    SpotifyTrackList *list = malloc(sizeof(SpotifyTrackList));
+    if (!list) {
+        json_object_put(root);
+        return NULL;
+    }
+
+    list->tracks = malloc(sizeof(SpotifyTrack) * count);
+    if (!list->tracks) {
+        free(list);
+        json_object_put(root);
+        return NULL;
+    }
+
+    list->count = count;
+
+    // Get total count
+    struct json_object *total_obj;
+    if (json_object_object_get_ex(root, "total", &total_obj)) {
+        list->total = json_object_get_int(total_obj);
+    } else {
+        list->total = count;
+    }
+
+    // Parse tracks
+    for (int i = 0; i < count; i++) {
+        struct json_object *item = json_object_array_get_idx(items, i);
+        struct json_object *track;
+
+        if (json_object_object_get_ex(item, "track", &track)) {
+            parse_track_json(track, &list->tracks[i]);
+        }
+    }
+
+    json_object_put(root);
+    return list;
+}
+
+SpotifyPlaylistResult* spotify_reorder_playlist_tracks(
+    SpotifyToken *token,
+    const char *playlist_id,
+    int range_start,
+    int insert_before,
+    int range_length,
+    const char **uris,
+    int uri_count,
+    const char *snapshot_id
+) {
+    if (!token || !playlist_id) {
+        fprintf(stderr, "Invalid parameters for reorder_playlist_tracks\n");
+        return NULL;
+    }
+
+    char url[512];
+    snprintf(url, sizeof(url), ENDPOINT_PLAYLIST_TRACKS, playlist_id);
+
+    struct json_object *body = json_object_new_object();
+
+    if (uris && uri_count > 0) {
+        // Replace mode: provide URIs
+        struct json_object *uris_array = json_object_new_array();
+        for (int i = 0; i < uri_count; i++) {
+            json_object_array_add(uris_array, json_object_new_string(uris[i]));
+        }
+        json_object_object_add(body, "uris", uris_array);
+    } else {
+        // Reorder mode: provide position parameters
+        json_object_object_add(body, "range_start", json_object_new_int(range_start));
+        json_object_object_add(body, "insert_before", json_object_new_int(insert_before));
+        
+        if (range_length > 0) {
+            json_object_object_add(body, "range_length", json_object_new_int(range_length));
+        }
+    }
+
+    // Optional snapshot_id for conflict detection
+    if (snapshot_id) {
+        json_object_object_add(body, "snapshot_id", json_object_new_string(snapshot_id));
+    }
+
+    const char *json_str = json_object_to_json_string(body);
+
+    struct json_object *response = spotify_api_put_json(token, url, json_str);
+    json_object_put(body);
+
+    if (!response) {
+        fprintf(stderr, "Failed to reorder/replace playlist tracks\n");
+        return NULL;
+    }
+
+    SpotifyPlaylistResult *result = malloc(sizeof(SpotifyPlaylistResult));
+    if (!result) {
+        json_object_put(response);
+        return NULL;
+    }
+
+    result->success = true;
+
+    struct json_object *snapshot_obj;
+    if (json_object_object_get_ex(response, "snapshot_id", &snapshot_obj)) {
+        strncpy(result->snapshot_id, json_object_get_string(snapshot_obj),
+                sizeof(result->snapshot_id) - 1);
+    }
+
+    json_object_put(response);
+    return result;
+}
