@@ -267,21 +267,18 @@ The app requests the following Spotify scopes:
 ### Web API implementation
 - [ ] Albums
   - [x] Get Albums
-  - [ ] Get Several Albums
+  - [x] Get Several Albums
   - [ ] Get Album Tracks
   - [x] Get User's Saved Albums
   - [x] Save Albums for Current User
   - [x] Remove User's Saved Albums
-  - [ ] Check User's Saved Albums
+  - [x] Check User's Saved Albums
   - [ ] Get New Releases
 - [ ] Artists
-  - [ ] Get Artist
-  - [ ] Get Several Artists
+  - [x] Get Artist
+  - [x] Get Several Artists
   - [x] Get Artist's Albums
   - [x] Get Artist's Top Tracks
-- [ ] Categories
-  - [ ] Get Several Browse Categories
-  - [ ] Get Single Browse Category
 - [ ] Player
   - [x] Get Playback State
   - [x] Transfer Playback
@@ -300,7 +297,7 @@ The app requests the following Spotify scopes:
   - [x] Add Item to Playback Queue
 - [ ] Playlists
   - [x] Get Playlist
-  - [ ] Change Playlist Details
+  - [x] Change Playlist Details
   - [ ] Get Playlist Items
   - [ ] Update Playlist Items
   - [x] Add Items to Playlist

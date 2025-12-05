@@ -22,7 +22,6 @@ typedef struct { // List of all the tracks
 typedef struct {
     char id[64];
     char name[256];
-    char genres[512];  // Comma-separated genres
     int followers;
     int popularity;
     char uri[128];
@@ -228,6 +227,7 @@ SpotifyRecentlyPlayed* spotify_get_recently_played(SpotifyToken *token, int limi
 // Free track list, artist list, album list, player state, user's playlist memory
 void spotify_free_album_detailed(SpotifyAlbumDetailed *album);
 void spotify_free_album_list(SpotifyAlbumList *list);
+void spotify_free_artist(SpotifyArtist *artist);
 void spotify_free_artist_list(SpotifyArtistList *list);
 void spotify_free_audio_features(SpotifyAudioFeatures *features);
 void spotify_free_audio_features_batch(SpotifyAudioFeatures *features, int count);
@@ -238,6 +238,7 @@ void spotify_free_playlist_result(SpotifyPlaylistResult *result);
 void spotify_free_queue(SpotifyQueue *queue);
 void spotify_free_recently_played(SpotifyRecentlyPlayed *history);
 void spotify_free_recommendations(SpotifyRecommendations *recommendations);
+void spotify_free_track(SpotifyTrack *track);
 void spotify_free_track_list(SpotifyTrackList *list);
 void spotify_free_user_profile(SpotifyUserProfile *profile);
 
